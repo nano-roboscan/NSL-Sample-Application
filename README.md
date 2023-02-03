@@ -10,6 +10,7 @@
 
 ## LINUX 컴파일 방법
 ```
+$ cd NSL-Sample-Application/NSL-Sample-Application/
 $ mkdir build
 $ cd build
 $ cmake ..
