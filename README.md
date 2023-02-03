@@ -8,6 +8,11 @@
 - 해당 제품을 네트워크에 연결 후 사용 가능 하며 아래는 LINUX 에서 COMPILE 하기 위한 방법입니다.
 
 
+## WINDOWS 컴파일 방법
+- Visual stude 2019에서 테스트 되었습니다.
+- PCL-1.8.1-AllInOne-msvc2017-win64.exe 및 opencv 를 설치 하셔야 합니다.
+
+
 ## LINUX 컴파일 방법
 ```
 $ cd NSL-Sample-Application/NSL-Sample-Application/
@@ -17,8 +22,3 @@ $ cmake ..
 $ make
 $ ./nsl-dev or ./nsl-dev -captureType 1 ipaddr 192.168.0.220
 ```
-
-
-## WINDOWS 컴파일 방법
-- Visual stude 2019에서 테스트 되었습니다.
-- PCL-1.8.1-AllInOne-msvc2017-win64.exe 및 opencv 를 설치 하셔야 합니다.
