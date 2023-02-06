@@ -833,9 +833,9 @@ int NSL3130AA::getGrayscaled(cv::Mat &imageLidar, bool bUsedPointCloud)
 					point.y = (double)(outY/1000);
 					point.z = (double)(outZ/1000);
 
-					point.b = imageDistance.at<Vec3b>(y, x)[0];
-					point.g = imageDistance.at<Vec3b>(y, x)[1];
-					point.r = imageDistance.at<Vec3b>(y, x)[2];
+					point.b = imageLidar.at<Vec3b>(y, x)[0];
+					point.g = imageLidar.at<Vec3b>(y, x)[1];
+					point.r = imageLidar.at<Vec3b>(y, x)[2];
 
 					if(y == 120 || x == 160)
 					{ 
