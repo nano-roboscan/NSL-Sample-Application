@@ -2108,8 +2108,6 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 #ifdef _WINDOWS
 	point_cloud_ptr = pcbVis();
 	viewer = rgbVis(point_cloud_ptr);
-#else
-	pthread_t threadID;
 #endif
 }
 
