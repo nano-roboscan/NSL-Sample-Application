@@ -49,6 +49,34 @@ videoSource::~videoSource()
 
 /////////////////////////////////////// static function ///////////////////////////////////////////////////////////
 
+/*
+# DEVICE_TYPE : 0 : NSL-1110AA, 1 : NSL-3130AA
+# ETH_TYPE : 0 : ethernet , 1 : USB
+# NET_TYPE : 0 : SSD-MobilenetV2, 1 : YoloV3, 2 : YoloV4, 3 : YoloV5-TRT
+# INPUT_SIZE : 0 : 320, 1 : 416
+
+# maxDetectingCnt : 1, 2 ... 10
+# showGuide : 0=disable, 1=enable (detector/discard_area.txt)
+# showConvertColor : 0=disable, 1=enable (detector/convert_area.txt)
+# showMini : 0=disable, 1=enable (show detected mini box)
+# resetTime : 3600 x 10 : 10 hours
+# captureType : 0 ~ 2
+#  0	AMPLITEDE_DISTANCE_MODE
+#  1	AMPLITEDE_DISTANCE_EX_MODE
+#  2	DISTANCE_GRAYSCALE_MODE
+# detectDistance : 0 ~ 12500
+# maxDistance : 0 ~ 12500
+# intTime : 50 ~ 4000
+# grayintTime : 50 ~ 40000
+# threshold : 0.1 ~ 0.9
+# overlay : 0=disable, 1=enable
+# amplitudeMin : 30 ~ 1000
+# edgeThresHold : 0=disable, 1~10000
+# medianFilter : 0=disable, 1~99
+# medianIter : 0=disable, 1~10000
+# gaussIter :  0=disable, 1~10000
+*/
+
 videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pAppCfg)
 {
 	memset(pAppCfg, 0, sizeof(CaptureOptions));
