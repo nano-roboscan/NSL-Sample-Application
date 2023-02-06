@@ -287,31 +287,31 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 
 		if( mouse_xpos < getWidth() )
 		{
-			int x_limit_left = mouse_xpos >= 15 ? 15 : mouse_xpos;
-			int x_limit_right = mouse_xpos <= (getWidth()-15) ? 15 : getWidth()-mouse_xpos;
+			int x_limit_left = mouse_xpos >= 10 ? 10 : mouse_xpos;
+			int x_limit_right = mouse_xpos <= (getWidth()-10) ? 10 : getWidth()-mouse_xpos;
 			
-			int y_limit_left = mouse_ypos >= 15 ? 15 : mouse_ypos;
-			int y_limit_right = mouse_ypos <= (getHeight()-15) ? 15 : getHeight()-mouse_ypos;
+			int y_limit_left = mouse_ypos >= 10 ? 10 : mouse_ypos;
+			int y_limit_right = mouse_ypos <= (getHeight()-10) ? 10 : getHeight()-mouse_ypos;
 
 //				printf("x = %d, %d :: y = %d, %d\n", x_limit_left, x_limit_right, y_limit_left, y_limit_right);
 			
-			cv::line(drawMat, cv::Point(mouse_xpos-x_limit_left, mouse_ypos), cv::Point(mouse_xpos+x_limit_right, mouse_ypos), cv::Scalar(255, 255, 255), 2);
-			cv::line(drawMat, cv::Point(mouse_xpos, mouse_ypos-y_limit_left), cv::Point(mouse_xpos, mouse_ypos+y_limit_right), cv::Scalar(255, 255, 255), 2);
+			cv::line(drawMat, cv::Point(mouse_xpos-x_limit_left, mouse_ypos), cv::Point(mouse_xpos+x_limit_right, mouse_ypos), cv::Scalar(255, 255, 0), 2);
+			cv::line(drawMat, cv::Point(mouse_xpos, mouse_ypos-y_limit_left), cv::Point(mouse_xpos, mouse_ypos+y_limit_right), cv::Scalar(255, 255, 0), 2);
 			
 			tofcam_XPos = mouse_xpos/width_div;
 		}
 		else{
 
-			int x_limit_left = mouse_xpos >= getWidth()+15 ? 15 : mouse_xpos-getWidth();
-			int x_limit_right = mouse_xpos <= getWidth()+(getWidth()-15) ? 15 : (getWidth()*2)-mouse_xpos;
+			int x_limit_left = mouse_xpos >= getWidth()+10 ? 10 : mouse_xpos-getWidth();
+			int x_limit_right = mouse_xpos <= getWidth()+(getWidth()-10) ? 10 : (getWidth()*2)-mouse_xpos;
 			
-			int y_limit_left = mouse_ypos >= 15 ? 15 : mouse_ypos;
-			int y_limit_right = mouse_ypos <= (getHeight()-15) ? 15 : getHeight()-mouse_ypos;
+			int y_limit_left = mouse_ypos >= 10 ? 10 : mouse_ypos;
+			int y_limit_right = mouse_ypos <= (getHeight()-10) ? 10 : getHeight()-mouse_ypos;
 			
 //				printf("x = %d, %d :: y = %d, %d\n", x_limit_left, x_limit_right, y_limit_left, y_limit_right);
 
-			cv::line(drawMat, cv::Point(mouse_xpos-x_limit_left, mouse_ypos), cv::Point(mouse_xpos+x_limit_right, mouse_ypos), cv::Scalar(255, 255, 255), 2);
-			cv::line(drawMat, cv::Point(mouse_xpos, mouse_ypos-y_limit_left), cv::Point(mouse_xpos, mouse_ypos+y_limit_right), cv::Scalar(255, 255, 255), 2);
+			cv::line(drawMat, cv::Point(mouse_xpos-x_limit_left, mouse_ypos), cv::Point(mouse_xpos+x_limit_right, mouse_ypos), cv::Scalar(255, 255, 0), 2);
+			cv::line(drawMat, cv::Point(mouse_xpos, mouse_ypos-y_limit_left), cv::Point(mouse_xpos, mouse_ypos+y_limit_right), cv::Scalar(255, 255, 0), 2);
 
 			tofcam_XPos = (mouse_xpos-getWidth())/width_div;
 		}
