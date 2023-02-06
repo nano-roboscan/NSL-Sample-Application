@@ -12,8 +12,6 @@
 - Visual stude 2019에서 테스트 되었습니다.
 - PCL-1.8.1-AllInOne-msvc2017-win64.exe 및 opencv 를 설치 하셔야 합니다.
 
-![windows](https://user-images.githubusercontent.com/106071093/216857445-c57284ba-67ef-4452-9f7d-8347dea9b7a2.PNG)
-
 ## LINUX 컴파일 방법
 ```
 $ cd NSL-Sample-Application/NSL-Sample-Application/
