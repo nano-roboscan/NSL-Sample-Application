@@ -8,6 +8,7 @@
 - 제공되는 OpenCV4.5.4의 경우 CUDA를 포함합니다.(WINDOWS용임)
 - 별도의 OpenCV를 사용하는 경우 CUDA 옵션에 따라 NSLFrame.h 에서 HAVE_CV_CUDA를 활성화 및 비활성화 하십시오.
 - 화면의 키보드 이벤트를 사용하여 모드 변경이 가능합니다. NSL3130AA.cpp 의 keyProc() 을 참조 하십시오.
+- 필요에 따라 PCL LIBRARY 패스를 등록 후 사용하세요.(EXE 파일을 실행하는 경우 DLL 패스가 필요합니다)
 - 해당 제품을 네트워크에 연결 후 사용 가능 하며 아래는 WINDOWS / LINUX 에서 COMPILE 하기 위한 방법입니다.
 
 ## WINDOWS 컴파일 방법
