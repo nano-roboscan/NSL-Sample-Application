@@ -241,7 +241,7 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 
 	cv::Mat drawMat;
 #ifdef HAVE_CV_CUDA
-	cuda::GpuMat gpuGrayImage(grayMat), gpuDistImage(distMat), gpuHconcat (grayMat.rows, grayMat.cols * 2, grayMat.type());
+	cv::cuda::GpuMat gpuGrayImage(grayMat), gpuDistImage(distMat), gpuHconcat (grayMat.rows, grayMat.cols * 2, grayMat.type());
 	
 	gpuGrayImage.copyTo(gpuHconcat(cv::Rect(0,0,gpuGrayImage.cols, gpuGrayImage.rows)));
 	gpuDistImage.copyTo(gpuHconcat(cv::Rect(gpuGrayImage.cols, 0,gpuDistImage.cols, gpuDistImage.rows)));
