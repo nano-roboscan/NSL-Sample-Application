@@ -237,11 +237,18 @@ private:
 		_endthreadex( 0 );
 	    return 0;
 	}
+
+	HANDLE hThread;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr;
+	pcl::visualization::PCLVisualizer::Ptr viewer;
+	LensTransform  lensTransform;
 #else
 	static void* rxWrapper(void* thisPtr) {
 		((NSL1110AA*) thisPtr)->rxDme660(NULL);
 		return NULL;
 	}
+
+	pthread_t threadID;
 #endif
 
 	std::string  mIpaddrStr;
@@ -258,15 +265,6 @@ private:
 	std::vector<cv::Vec3b> colorVector;
 	double	sin_angle;
 	double	cos_angle;
-
-	LensTransform  lensTransform;
-#ifdef _WINDOWS
-	HANDLE hThread;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr;
-	pcl::visualization::PCLVisualizer::Ptr viewer;
-#else
-	pthread_t threadID;
-#endif
 
 };
 

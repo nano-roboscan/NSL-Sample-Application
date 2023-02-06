@@ -339,7 +339,7 @@ private:
 	int setDistanceColor(cv::Mat &imageLidar, int x, int y, int value );
 	void setAmplitudeColor(cv::Mat &imageLidar, int x, int y, int value );
 	int getDistanceAmplitude(cv::Mat &imageDistance, cv::Mat &imageAmplitude, bool bUsedPointCloud);
-	int getGrayscaled(cv::Mat &imageLidar, uint8_t *responseBuff);
+	int getGrayscaled(cv::Mat &imageLidar, bool bUsedPointCloud);
 	int sendToDev(SOCKET sock, uint8_t *pData, int nLen);
 	void reqOverflow(SOCKET control_sock);
 	void reqHdrMode(SOCKET control_sock);
@@ -379,6 +379,8 @@ private:
 	HANDLE hThread;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr;
 	pcl::visualization::PCLVisualizer::Ptr viewer;
+
+	LensTransform  lensTransform;
 #else
 	static void* rxWrapper(void* thisPtr) {
 		((NSL3130AA*) thisPtr)->rxTofcam660(NULL);
@@ -409,7 +411,6 @@ private:
 	double	sin_angle;
 	double	cos_angle;
 
-	LensTransform  lensTransform;
 };
 
 #endif

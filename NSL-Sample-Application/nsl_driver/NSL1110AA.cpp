@@ -756,45 +756,48 @@ int NSL1110AA::getDistanceAmplitude(cv::Mat &imageDistance, cv::Mat &imageAmplit
 			}
 
 
-			if( pixelDistance < DME660_LOW_AMPLITUDE ){
+			if( tofcamInfo.tofcamModeType != GRAYSCALE_MODE ){
+				if( pixelDistance < DME660_LOW_AMPLITUDE ){
 
-				int Distance = (MAX_DISTANCEVALUE * pixelDistance / MAX_PHASE);
-				distanceTable[y*DME660_IMAGE_WIDTH+x] = Distance;
-				
+					int Distance = (MAX_DISTANCEVALUE * pixelDistance / MAX_PHASE);
+					distanceTable[y*DME660_IMAGE_WIDTH+x] = Distance;
+					
 #ifdef _WINDOWS
-				if( bUsedPointCloud ){
-					pcl::PointXYZRGB point;
-					pcl::PointXYZRGB basePoint;
+					if( bUsedPointCloud ){
+						pcl::PointXYZRGB point;
+						pcl::PointXYZRGB basePoint;
 
-					double outX, outY, outZ;
-					lensTransform.transformPixel((tofcamInfo.roiXMin-DEFAULT_ROI_XMIN)+x, (tofcamInfo.roiYMin-DEFAULT_ROI_YMIN)+y, Distance, outX, outY, outZ, sin_angle, cos_angle);
+						double outX, outY, outZ;
+						lensTransform.transformPixel((tofcamInfo.roiXMin-DEFAULT_ROI_XMIN)+x, (tofcamInfo.roiYMin-DEFAULT_ROI_YMIN)+y, Distance, outX, outY, outZ, sin_angle, cos_angle);
 
-					point.x = (double)(outX/1000);
-					point.y = (double)(outY/1000);
-					point.z = (double)(outZ/1000);
+						point.x = (double)(outX/1000);
+						point.y = (double)(outY/1000);
+						point.z = (double)(outZ/1000);
 
-					point.b = imageDistance.at<Vec3b>(y, x)[0];
-					point.g = imageDistance.at<Vec3b>(y, x)[1];
-					point.r = imageDistance.at<Vec3b>(y, x)[2];
+						point.b = imageDistance.at<Vec3b>(y, x)[0];
+						point.g = imageDistance.at<Vec3b>(y, x)[1];
+						point.r = imageDistance.at<Vec3b>(y, x)[2];
 
-					if(y == 120 || x == 160)
-					{ 
-						basePoint.x = (double)(outX/1000);
-						basePoint.y = (double)(outY/1000);
-						basePoint.z = (double)(outZ/1000);
+						if(y == 120 || x == 160)
+						{ 
+							basePoint.x = (double)(outX/1000);
+							basePoint.y = (double)(outY/1000);
+							basePoint.z = (double)(outZ/1000);
 
-						basePoint.b = 255;
-						basePoint.g = 255;
-						basePoint.r = 255;
+							basePoint.b = 255;
+							basePoint.g = 255;
+							basePoint.r = 255;
+						}
+
+						point_cloud_ptr->points.push_back(point);
+						point_cloud_ptr->points.push_back(basePoint);
 					}
-
-					point_cloud_ptr->points.push_back(point);
-					point_cloud_ptr->points.push_back(basePoint);
-				}
 #endif				
+				}
+				else{
+					distanceTable[y*DME660_IMAGE_WIDTH+x] = pixelDistance;
+				}
 			}
-			else
-				distanceTable[y*DME660_IMAGE_WIDTH+x] = pixelDistance;
 
 		}
 	}
@@ -2001,19 +2004,19 @@ NSL1110AA::NSL1110AA( std::string ipaddr )
 #ifdef _WINDOWS
 	unsigned threadID;
 	hThread = (HANDLE)_beginthreadex(NULL, 0, &NSL1110AA::rxWrapper, this, 0, &threadID);
-#else
-	pthread_create(&threadID, NULL, NSL1110AA::rxWrapper, this);
-#endif
+
 	double psdAngle = 0.0f;	//seobi psd angle 0'
 	sin_angle = sin(psdAngle*PI/180.0);
 	cos_angle = cos(psdAngle*PI/180.0);
 	
 	lensTransform.initLensDistortionTable(STANDARD_FIELD);
 
-#ifdef _WINDOWS
 	point_cloud_ptr = pcbVis();
 	viewer = rgbVis(point_cloud_ptr);
+#else
+	pthread_create(&threadID, NULL, NSL1110AA::rxWrapper, this);
 #endif
+
 }
 
 
