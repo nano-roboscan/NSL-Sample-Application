@@ -242,11 +242,11 @@ void videoSource::getMouseEvent( int *mouse_xpos, int *mouse_ypos )
 void videoSource::initDeepLearning( void )
 {
 #ifdef _WINDOWS
-	cv::String ssd_model = "deepLearning\\frozen_inference_graph.pb";
-	cv::String ssd_config = "deepLearning\\ssd_mobilenet_v2.pbtxt";
+	cv::String ssd_model = "..\\deepLearning\\frozen_inference_graph.pb";
+	cv::String ssd_config = "..\\deepLearning\\ssd_mobilenet_v2.pbtxt";
 #else
-	cv::String ssd_model = "../deepLearning/frozen_inference_graph.pb";
-	cv::String ssd_config = "../deepLearning/ssd_mobilenet_v2.pbtxt";
+	cv::String ssd_model = "../../deepLearning/frozen_inference_graph.pb";
+	cv::String ssd_config = "../../deepLearning/ssd_mobilenet_v2.pbtxt";
 #endif
 
 	struct stat buffer;   
