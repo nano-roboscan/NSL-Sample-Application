@@ -349,6 +349,7 @@ private:
 	void reqSingleFrame(SOCKET control_sock, int modeType);
 	void reqStopStream(SOCKET control_sock);
 	void reqIntegrationTime(SOCKET control_sock);
+	void reqFilterParameter(SOCKET control_sock);
 	void reqMinAmplitude(SOCKET control_sock);
 	void reqSetROI(SOCKET control_sock);
 	void reqGrayscaleLedControl(SOCKET control_sock);

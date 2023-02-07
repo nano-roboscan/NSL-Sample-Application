@@ -76,10 +76,17 @@ typedef struct CaptureOptions_{
 	int medianFilterSize;
 	int medianFilterIterations;	
 	int gaussIteration;
+
+	int medianFilterEnable;
+	int averageFilterEnable;
+	int	temporalFilterFactorActual;
+	int	temporalFilterThreshold;
+	int	interferenceUseLashValueEnable;
+	int	interferenceLimit;
+
 	int 	*pDistanceTable;
 	void	*frameMat;
 	void	*distMat;
-	void	*frameConversionMat;
 
 	// deep learning parameter
 	int inputSize;

@@ -40,7 +40,7 @@ private:
 	std::chrono::steady_clock::time_point timeDelay;
 	std::chrono::steady_clock::time_point fpsTime;
 	clock_t beginTime, endTime ;
-	double second_time;
+	clock_t second_time;
 
 	std::atomic<int> x_start, y_start;
 

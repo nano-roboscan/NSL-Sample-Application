@@ -97,9 +97,16 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	pAppCfg->minAmplitude = find_int_arg(argc, argv, "-amplitudeMin", 50);
 
 	pAppCfg->edgeThresHold = find_int_arg(argc, argv, "-edgeThresHold", 0);
-	pAppCfg->medianFilterSize = find_int_arg(argc, argv, "-medianFilter", 0);
+	pAppCfg->medianFilterSize = find_int_arg(argc, argv, "-medianFilterSize", 0);
 	pAppCfg->medianFilterIterations = find_int_arg(argc, argv, "-medianIter", 0);
 	pAppCfg->gaussIteration = find_int_arg(argc, argv, "-gaussIter", 0);
+
+	pAppCfg->medianFilterEnable = find_int_arg(argc, argv, "-medianFilterEnable", 0);
+	pAppCfg->averageFilterEnable = find_int_arg(argc, argv, "-averageFilterEnable", 0);
+	pAppCfg->temporalFilterFactorActual = find_int_arg(argc, argv, "-temporalFactor", 0);
+	pAppCfg->temporalFilterThreshold = find_int_arg(argc, argv, "-temporalThresHold", 0);
+	pAppCfg->interferenceUseLashValueEnable = find_int_arg(argc, argv, "-interferenceEnable", 0);
+	pAppCfg->interferenceLimit = find_int_arg(argc, argv, "-interferenceLimit", 0);
 
 	if( pAppCfg->inputSize == 0 ) pAppCfg->inputSize = 320;
 	else if( pAppCfg->inputSize == 1 ) pAppCfg->inputSize = 416;
@@ -236,7 +243,7 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 {
 	int mouse_xpos, mouse_ypos;
 	getMouseEvent(&mouse_xpos, &mouse_ypos);
-#if 1
+
 //	printf("grayMat.row = %d col = %d\n", grayMat.rows, grayMat.cols);
 
 	cv::Mat drawMat;
@@ -367,18 +374,18 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 
     cv::imshow(WIN_NAME, drawMat);
 	drawPointCloud();
-#endif	
+
 	std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
 	double time_all = (curTime - fpsTime).count() / 1000000.0;
 
-	second_time += time_all;
+	clock_t end = std::clock();
 	appCfg->fpsCount++;
 
-	if( second_time >= 1000.0f ){
+	if( (end-second_time) >= 1000.0f ){
 		appCfg->displayFps = appCfg->fpsCount;
 		printf("sample %d fps time = %.3f\n", appCfg->displayFps, time_all);
 		appCfg->fpsCount = 0;
-		second_time = 0;
+		second_time = end;
 	}
 
 	return;
@@ -400,7 +407,6 @@ bool videoSource::captureLidar( int timeout, CaptureOptions *pAppCfg )
 	bool ret = Capture((void **)&camImage, timeout);
 
 	if( ret ){
-		pAppCfg->frameConversionMat = camImage->frameMat;
 		pAppCfg->frameMat = camImage->frameMat;
 		pAppCfg->distMat = camImage->distMat;
 		pAppCfg->pDistanceTable = camImage->pDistanceTable;

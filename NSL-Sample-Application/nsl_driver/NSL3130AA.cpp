@@ -193,8 +193,8 @@ static uint8_t initialCode660[][100]={
 	,{0xff ,0xff ,0xaa ,0x55 ,0x00 ,0x00 ,0x00 ,0x0a ,0x00 ,0x01 ,0x03 ,0x20 ,0x00 ,0x64 ,0x00 ,0x32 ,0x00 ,0x64 ,0xff ,0xff ,0x55 ,0xaa}
 	// COMMAND_SET_HDR :: DEFAULT_HDR_MODE
 	,{0xff ,0xff ,0xaa ,0x55 ,0x00 ,0x00 ,0x00 ,0x03 ,0x00 ,0x19 ,DEFAULT_HDR_MODE ,0xff ,0xff ,0x55 ,0xaa}
-	// COMMAND_SET_FILTER:: temper filter(2) 0 : THRESHOLD(2) 200(0xC8) :: all off
-	,{0xff ,0xff ,0xaa ,0x55 ,0x00 ,0x00 ,0x00 ,0x11 ,0x00 ,0x16 ,0x00 ,0x00 ,0x00 ,0xc8 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0xff ,0xff ,0x55 ,0xaa}
+	// COMMAND_SET_FILTER:: temper filter(2) 0 : THRESHOLD(0) 0 :: all off
+	,{0xff ,0xff ,0xaa ,0x55 ,0x00 ,0x00 ,0x00 ,0x11 ,0x00 ,0x16 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0xff ,0xff ,0x55 ,0xaa}
 	// COMMAND_SET_MODULATION : 0(VALUE_12MHZ)
 	,{0xff ,0xff ,0xaa ,0x55 ,0x00 ,0x00 ,0x00 ,0x05 ,0x00 ,0x17 ,0x00 ,0x00 ,0x00 ,0xff ,0xff ,0x55 ,0xaa}
 	// COMMAND_SET_ROI :: 320 x 240
@@ -1044,6 +1044,34 @@ void NSL3130AA::reqIntegrationTime(SOCKET control_sock)
 
 }
 
+
+void NSL3130AA::reqFilterParameter(SOCKET control_sock)
+{
+	uint8_t data[] = {0x00 ,0x16 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00 ,0x00};
+	uint32_t data_len = 17;	
+
+	data[2] = (tofcamInfo.config.temporalFilterFactorActual>>8)&0xFF;
+	data[3] = (tofcamInfo.config.temporalFilterFactorActual>>0)&0xFF;
+	data[4] = (tofcamInfo.config.temporalFilterThreshold>>8)&0xFF;
+	data[5] = (tofcamInfo.config.temporalFilterThreshold>>0)&0xFF;
+	data[6] = tofcamInfo.config.medianFilterEnable ? 1 : 0;
+	data[7] = tofcamInfo.config.averageFilterEnable ? 1 : 0;
+	data[8] = (tofcamInfo.config.edgeFilterThreshold>>8)&0xFF;
+	data[9] = (tofcamInfo.config.edgeFilterThreshold>>0)&0xFF;
+	data[10] = tofcamInfo.config.interferenceUseLashValueEnable ? 1 : 0;
+	data[11] = (tofcamInfo.config.interferenceLimit>>8)&0xFF;
+	data[12] = (tofcamInfo.config.interferenceLimit>>0)&0xFF;
+	data[13] = 0;//(camInfo.config.edgefilterThresholdLow>>8)&0xFF;
+	data[14] = 0;//(camInfo.config.edgefilterThresholdLow>>0)&0xFF;
+	data[15] = 0;//(camInfo.config.edgefilterThresholdHigh>>8)&0xFF;
+	data[16] = 0;//(camInfo.config.edgefilterThresholdHigh>>0)&0xFF;
+
+	int bComplete = sendToDev(control_sock, data, data_len);
+	printf("reqFilterParameter : %d\n", bComplete);
+
+}
+
+
 void NSL3130AA::reqMinAmplitude(SOCKET control_sock)
 {
 	uint8_t data[] = {0x00 ,0x15 ,0x00 ,0x1e};
@@ -1686,7 +1714,6 @@ void *NSL3130AA::rxTofcam660(void *arg)
 		}
 
 		keyProc();
-		if( GET_BUFF_CNT(tofcamBuff, TOFCAM_ETH_BUFF_SIZE) == TOFCAM_ETH_BUFF_SIZE ) continue;
 
 		if( ttySerial ) {
 			rxSerial(socketbuff, sizeof(socketbuff), true);
@@ -2034,9 +2061,18 @@ void NSL3130AA::startCaptureCommand(int netType, void *pCapOption )
 	tofcamInfo.config.integrationTimeGrayScale = pCapOpt->grayIntegrationTime;
 	tofcamInfo.config.integrationTime3D = pCapOpt->integrationTime;
 	tofcamInfo.config.minAmplitude = pCapOpt->minAmplitude;
+
+	tofcamInfo.config.medianFilterEnable = pCapOpt->medianFilterEnable;
+	tofcamInfo.config.edgeFilterThreshold = pCapOpt->edgeThresHold;
+	tofcamInfo.config.averageFilterEnable = pCapOpt->averageFilterEnable;
+	tofcamInfo.config.temporalFilterFactorActual = pCapOpt->temporalFilterFactorActual;
+	tofcamInfo.config.temporalFilterThreshold = pCapOpt->temporalFilterThreshold;
+	tofcamInfo.config.interferenceUseLashValueEnable = pCapOpt->interferenceUseLashValueEnable;
+	tofcamInfo.config.interferenceLimit = pCapOpt->interferenceLimit;
 	
 	reqIntegrationTime(tofcamInfo.control_sock);
 	reqMinAmplitude(tofcamInfo.control_sock);
+	reqFilterParameter(tofcamInfo.control_sock);
 
 	if( tofcamInfo.tofcamModeType == DISTANCE_GRAYSCALE_MODE ){
 		tofcamInfo.led_control = 1;		

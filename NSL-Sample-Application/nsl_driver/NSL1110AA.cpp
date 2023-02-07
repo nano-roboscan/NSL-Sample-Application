@@ -1499,11 +1499,7 @@ void *NSL1110AA::rxDme660(void *arg)
 		loopCnt = 0;
 
 		keyProc();
-
-		if( GET_BUFF_CNT(tofcamBuff, DME660_ETH_BUFF_SIZE) > 0 ) continue;
 		
-//		if( tofcamInfo.meanAvg > 0 ) adjustGrayscaled();
-
 		const auto& time_cap0 = std::chrono::steady_clock::now();		
 
 		int otherLen = reqSingleFrame(tofcamInfo.tofcamModeType, response[0]);
@@ -1883,6 +1879,7 @@ void NSL1110AA::startCaptureCommand(int netType, void *pCapOption)
 	tofcamInfo.integrationTime3D = pCapOpt->integrationTime;
 	tofcamInfo.minAmplitude = pCapOpt->minAmplitude;
 	tofcamInfo.edgeThresHold = pCapOpt->edgeThresHold;
+	tofcamInfo.bUsedMedianFilter = pCapOpt->medianFilterEnable;
 	tofcamInfo.medianFilterSize = pCapOpt->medianFilterSize;
 	tofcamInfo.medianFilterIterations = pCapOpt->medianFilterIterations;
 	tofcamInfo.gaussIteration = pCapOpt->gaussIteration;
@@ -1894,7 +1891,8 @@ void NSL1110AA::startCaptureCommand(int netType, void *pCapOption)
 		tofcamInfo.bUsedGaussFilter = false;
 	}
 
-	if( tofcamInfo.medianFilterSize > 0 
+	if( tofcamInfo.bUsedMedianFilter
+		&& tofcamInfo.medianFilterSize > 0 
 		&& tofcamInfo.medianFilterIterations > 0 )
 	{
 		tofcamInfo.bUsedMedianFilter = true;
