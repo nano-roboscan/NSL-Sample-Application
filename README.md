@@ -5,7 +5,7 @@
 - Lidar 데이터를 통한 딥러닝을 테스트 하는 경우 main.cpp의 SUPPORT_DEEPLEARNING을 활성화 하십시오.
 - 응용 프로그램의 옵션(argument)을 확인하고 싶은 경우 videoSource.cpp의 initAppCfg()를 참조 하십시오.
 - 화면의 키보드 이벤트를 사용하여 모드 변경이 가능합니다. NSL3130AA.cpp 의 keyProc() 을 참조 하십시오.
-- LINUX 버전은 2D viewer로 구현되어 있으며 WINDOWS 버전은 3D viewer(Point cloud)를 지원합니다. 
+- LINUX 버전은 2D viewer로 구현되어 있으며 WINDOWS 버전은 23D viewer(Point cloud)도 지원합니다. 
 - WINDOWS의 경우 POINT CLOUD를 위해 PCL-1.8.1-AllInOne-msvc2017-win64.exe 를 사용합니다.
 - 제공되는 OpenCV4.5.4 버전의 설치 경로와 visual studio project 속성의 c++ 및 링커 탭의 패스를 맞추어 주세요.
 - 제공되는 OpenCV4.5.4의 경우 CUDA를 포함합니다.(WINDOWS용임)
