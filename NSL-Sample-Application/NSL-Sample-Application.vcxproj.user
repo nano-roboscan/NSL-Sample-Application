@@ -1,11 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerEnvironment>PATH=C:\Program Files\PCL 1.8.1\bin;$(ProjectDir);%PATH%;</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PATH=C:\Program Files\PCL 1.8.1\bin;C:\Program Files\OpenNI2\Redist;%PATH%;</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>
+    </LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerEnvironment>PATH=C:\Program Files\PCL 1.8.1\bin;$(ProjectDir);%PATH%;</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PATH=C:\Program Files\PCL 1.8.1\bin;C:\Program Files\OpenNI2\Redist;%PATH%;</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
