@@ -304,6 +304,8 @@ public:
 	virtual int getVideoWidth();
 	virtual int getVideoHeight();
 	virtual bool isRotate90();
+	virtual int getWidthDiv();
+	virtual int getHeightDiv();
 	virtual int getWidth();
 	virtual int getHeight();
 	virtual std::string getLeftViewName();

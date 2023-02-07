@@ -56,6 +56,8 @@ using namespace cv;
 //#define TOFCAM660_ROTATE_IMAGE_90
 //#define ROTATE_IMAGE_ADJUST_ROI
 
+#define RESIZE_IMAGE_MAT
+
 #define __STREAMING_COMMAND__
 
 
@@ -1818,7 +1820,6 @@ int NSL3130AA::getVideoWidth(){
 	if( tofcamInfo.rotate_90 != 0 ){
 		return TOF660_IMAGE_HEIGHT;
 	}
-
 	return TOF660_IMAGE_WIDTH;
 }
 
@@ -1826,12 +1827,32 @@ int NSL3130AA::getVideoHeight(){
 	if( tofcamInfo.rotate_90 != 0 ){
 		return TOF660_IMAGE_WIDTH;
 	}
-
 	return TOF660_IMAGE_HEIGHT;
 }
 
+int NSL3130AA::getWidthDiv()				
+{ 
+	if( tofcamInfo.rotate_90 != 0 ){
+		return tofcamInfo.height/TOF660_IMAGE_HEIGHT;
+	}
+	return tofcamInfo.width/TOF660_IMAGE_WIDTH; 
+}
+
+int NSL3130AA::getHeightDiv()
+{
+	if( tofcamInfo.rotate_90 != 0 ){
+		return tofcamInfo.width/TOF660_IMAGE_WIDTH;
+	}
+	return tofcamInfo.height/TOF660_IMAGE_HEIGHT; 
+}
+
+
+
 int NSL3130AA::getWidth()				
 { 
+	if( tofcamInfo.rotate_90 != 0 ){
+		return tofcamInfo.height;
+	}
 	return tofcamInfo.width; 
 }
 
@@ -1840,6 +1861,9 @@ int NSL3130AA::getWidth()
  */
 int NSL3130AA::getHeight()
 {
+	if( tofcamInfo.rotate_90 != 0 ){
+		return tofcamInfo.width;
+	}
 	return tofcamInfo.height; 
 }
 
@@ -1940,6 +1964,8 @@ bool NSL3130AA::Capture( void** output, int timeout )
 			}
 
 			static cv::Mat resizeDist, resizeFrame;
+
+#ifdef RESIZE_IMAGE_MAT
 #ifdef HAVE_CV_CUDA
 			cuda::GpuMat gpuImage, gpuOutImage, gpuImageDist, gpuOutImageDist;
 
@@ -1950,50 +1976,47 @@ bool NSL3130AA::Capture( void** output, int timeout )
 //			tofcamInfo.meanAvg = avg[0];
 
 			if( tofcamInfo.rotate_90 != 0 ){
-				if( tofcamInfo.height != 640 ){
-					tofcamInfo.width = 480;
-					tofcamInfo.height = 640;
-				}
-				
 				cuda::rotate(gpuImage, gpuImage, Size( 240, 320 ), -90, 239, 0, cv::INTER_LINEAR);
 				cuda::rotate(gpuImageDist, gpuImageDist, Size( 240, 320 ), -90, 239, 0, cv::INTER_LINEAR);
+
+				cuda::resize(gpuImage, gpuOutImage, cv::Size( 480, 640 ),  cv::INTER_LANCZOS4);
+				cuda::resize(gpuImageDist, gpuOutImageDist, cv::Size( 480, 640 ),  cv::INTER_LANCZOS4);
 			}
 			else{	// detectnet, poseNet, imagenet
-				if( tofcamInfo.height != 480 ){
-					tofcamInfo.width = 640;
-					tofcamInfo.height = 480;
-				}
+				cuda::resize(gpuImage, gpuOutImage, cv::Size( tofcamInfo.width, tofcamInfo.height ),  cv::INTER_LANCZOS4);
+				cuda::resize(gpuImageDist, gpuOutImageDist, cv::Size( tofcamInfo.width, tofcamInfo.height ),  cv::INTER_LANCZOS4);
 			}
 
 			// up-sampling : INTER_CUBIC, INTER_LANCZOS4
 			// down-sampling : INTER_AREA
-
-			cuda::resize(gpuImage, gpuOutImage, cv::Size( tofcamInfo.width, tofcamInfo.height ),  cv::INTER_LANCZOS4);
-			cuda::resize(gpuImageDist, gpuOutImageDist, cv::Size( tofcamInfo.width, tofcamInfo.height ),  cv::INTER_LANCZOS4);
 
 			gpuOutImage.download(resizeFrame);
 			gpuOutImageDist.download(resizeDist);
 #else
 			if( tofcamInfo.rotate_90 != 0 )
 			{
-				if( tofcamInfo.height != 640 ){
-					tofcamInfo.width = 480;
-					tofcamInfo.height = 640;
-				}
+				cv::rotate(image, image, ROTATE_90_CLOCKWISE);
+				cv::rotate(imageDist, imageDist, ROTATE_90_CLOCKWISE);
 
+				cv::resize( image, resizeFrame, cv::Size( 480, 640 ) );
+				cv::resize( imageDist, resizeDist, cv::Size( 480, 640 ));
+			}
+			else{	// poseNet, imagenet
+				cv::resize( image, resizeFrame, cv::Size( tofcamInfo.width, tofcamInfo.height ) );
+				cv::resize( imageDist, resizeDist, cv::Size( tofcamInfo.width, tofcamInfo.height ));
+			}
+#endif
+
+#else	// RESIZE_IMAGE_MAT
+			if( tofcamInfo.rotate_90 != 0 )
+			{
 				cv::rotate(image, image, ROTATE_90_CLOCKWISE);
 				cv::rotate(imageDist, imageDist, ROTATE_90_CLOCKWISE);
 			}
-			else{	// poseNet, imagenet
-				if( tofcamInfo.height != 480 ){
-					tofcamInfo.width = 640;
-					tofcamInfo.height = 480;
-				}
-			}
 
-			cv::resize( image, resizeFrame, cv::Size( tofcamInfo.width, tofcamInfo.height ) );// INTER_CUBIC , INTER_LANCZOS4 
-			cv::resize( imageDist, resizeDist, cv::Size( tofcamInfo.width, tofcamInfo.height )); // INTER_CUBIC , INTER_LANCZOS4 
-#endif
+			resizeFrame = image;
+			resizeDist = imageDist;
+#endif // RESIZE_IMAGE_MAT
 
 			tofcamImage.frameMat = &resizeFrame;
 			tofcamImage.distMat = &resizeDist;		
@@ -2138,7 +2161,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	tofcamInfo.config.roi_yMax = DEFAULT_ROI_YMAX;
 #endif
 
-	tofcamInfo.usedPointCloud = 1;
+
 	tofcamInfo.led_control = 1;
 	tofcamInfo.captureNetType = NONEMODEL_TYPE;
 	tofcamInfo.config.hdr_mode = DEFAULT_HDR_MODE;
@@ -2156,6 +2179,13 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 //		tofcamInfo.config.compensationFlag |= MASK_AMBIENT_LIGHT_COMPENSATION;
 	tofcamInfo.config.minAmplitude = 50;	// 0x32
 
+#ifdef RESIZE_IMAGE_MAT
+	tofcamInfo.width = 640;
+	tofcamInfo.height = 480;
+#else
+	tofcamInfo.width = DefaultWidth;
+	tofcamInfo.height = DefaultHeight;
+#endif
 	if( ttySerial ) {
 		tofcamInfo.control_sock = setSerialBaudrate();
 	}
@@ -2168,6 +2198,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	initializeTofcam660(tofcamInfo.control_sock);
 
 #ifdef _WINDOWS
+
 	unsigned threadID;
 	hThread = (HANDLE)_beginthreadex(NULL, 0, &NSL3130AA::rxWrapper, this, 0, &threadID);
 
@@ -2175,6 +2206,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	sin_angle = sin(psdAngle*PI/180.0);
 	cos_angle = cos(psdAngle*PI/180.0);
 
+	tofcamInfo.usedPointCloud = 1;
 	lensTransform.initLensDistortionTable(STANDARD_FIELD);
 	
 	point_cloud_ptr = pcbVis();

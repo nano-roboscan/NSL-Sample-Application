@@ -39,7 +39,7 @@ videoSource::videoSource()
 {
 	printf("new videoSource()\n");
 
-	second_time = 0;
+	fpsTime = std::chrono::steady_clock::now();
 }
 
 videoSource::~videoSource()
@@ -137,6 +137,7 @@ videoSource* videoSource::Create( int type, char *ipaddr )
 
 	return src;
 }
+
 
 void videoSource::callback_mouse_click(int event, int x, int y, int flags, void* user_data)
 {
@@ -237,14 +238,72 @@ void videoSource::getMouseEvent( int *mouse_xpos, int *mouse_ypos )
 	*mouse_ypos = y_start;
 }
 
-
 /////////////////////////////////////// public function ///////////////////////////////////////////////////////////
+void videoSource::initDeepLearning( void )
+{
+#ifdef _WINDOWS
+	cv::String ssd_model = "deepLearning\\frozen_inference_graph.pb";
+	cv::String ssd_config = "deepLearning\\ssd_mobilenet_v2.pbtxt";
+#else
+	cv::String ssd_model = "../deepLearning/frozen_inference_graph.pb";
+	cv::String ssd_config = "../deepLearning/ssd_mobilenet_v2.pbtxt";
+#endif
+
+	struct stat buffer;   
+    if(stat (ssd_model.c_str(), &buffer) != 0 || stat (ssd_config.c_str(), &buffer) != 0 ){
+		printf("not support ssd mobilenetV2\n");
+		return;
+    }
+
+	dnnNet = cv::dnn::readNetFromTensorflow(ssd_model, ssd_config);
+#ifdef HAVE_CV_CUDA
+	dnnNet.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+	dnnNet.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+#else
+	dnnNet.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+	dnnNet.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+#endif
+
+	conf_threshold = 0.4f;
+}
+
+
+void videoSource::deepLearning( cv::Mat imageLidar )
+{
+	if( dnnNet.empty() ) return;
+	
+	cv::Mat blob = cv::dnn::blobFromImage(imageLidar, 1.0, cv::Size(300, 300), true, false);
+	dnnNet.setInput(blob);
+
+	cv::Mat res = dnnNet.forward();
+	cv::Mat detect(res.size[2], res.size[3], CV_32FC1, res.ptr<float>());
+
+	for (int i = 0; i < detect.rows; i++) {
+		float confidence = detect.at<float>(i, 2);
+
+		if (confidence >= conf_threshold && detect.at<float>(i, 1) == 1.0 ){
+			int x1_90d = cvRound(detect.at<float>(i, 3) * imageLidar.cols);
+			int y1_90d = cvRound(detect.at<float>(i, 4) * imageLidar.rows);
+			int x2_90d = cvRound(detect.at<float>(i, 5) * imageLidar.cols);
+			int y2_90d = cvRound(detect.at<float>(i, 6) * imageLidar.rows);
+
+			cv::rectangle(imageLidar, cv::Rect(cv::Point(x1_90d, y1_90d), cv::Point(x2_90d, y2_90d)), cv::Scalar(0, 255, 0), 2);
+			std::string label = cv::format("%2.0f:%4.3f", detect.at<float>(i, 1), confidence);
+			cv::putText(imageLidar, label, cv::Point(x1_90d, y1_90d - 1), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(0, 255, 0));
+		}
+	}
+}
+
+
+
+
 void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *appCfg)
 {
 	int mouse_xpos, mouse_ypos;
 	getMouseEvent(&mouse_xpos, &mouse_ypos);
 
 //	printf("grayMat.row = %d col = %d\n", grayMat.rows, grayMat.cols);
+
 
 	cv::Mat drawMat;
 #ifdef HAVE_CV_CUDA
@@ -263,32 +322,41 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 
 	cv::Mat viewInfo(VIEW_INFO_Y_SIZE, grayMat.cols * 2, CV_8UC3, cv::Scalar(0,0,0));
 	std::string dist_caption;
+	std::string defaultInfoTitle;
 
+	int width_div = getWidthDiv();
+	int height_div = getHeightDiv();
 
 	if( appCfg->lidarType == NSL3130_TYPE ){
-		std::string defaultInfoTitle = cv::format("NANOSYSTEMS NSL-3130AA Viewer");
-		putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(340, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+		defaultInfoTitle = cv::format("NANOSYSTEMS NSL-3130AA Viewer");
 	}
 	else{
-		std::string defaultInfoTitle = cv::format("NANOSYSTEMS NSL-1110AA Viewer");
-		putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(340, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+		defaultInfoTitle = cv::format("NANOSYSTEMS NSL-1110AA Viewer");
 	}
 	
 	std::string defaultInfoLower = cv::format("Nanosystems. co.,Ltd.\u00402022");
-	putText(viewInfoLower, defaultInfoLower.c_str(), cv::Point(780, 26), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(0, 0, 0));
 
-	cv::line(drawMat, cv::Point(0, 0), cv::Point(0,10), cv::Scalar(0, 255, 255), 2);
-	cv::line(drawMat, cv::Point(0, 0), cv::Point(10,0), cv::Scalar(0, 255, 255), 2);
-	
-	cv::line(drawMat, cv::Point(grayMat.cols, 0), cv::Point(grayMat.cols,10), cv::Scalar(0, 255, 255), 2);
-	cv::line(drawMat, cv::Point(grayMat.cols, 0), cv::Point(grayMat.cols+10,0), cv::Scalar(0, 255, 255), 2);
+	if( isRotate90() == false ){
+		cv::line(drawMat, cv::Point(0, 0), cv::Point(0,10), cv::Scalar(0, 255, 255), 1);
+		cv::line(drawMat, cv::Point(0, 0), cv::Point(10,0), cv::Scalar(0, 255, 255), 1);
+		
+		cv::line(drawMat, cv::Point(grayMat.cols, 0), cv::Point(grayMat.cols,10), cv::Scalar(0, 255, 255), 1);
+		cv::line(drawMat, cv::Point(grayMat.cols, 0), cv::Point(grayMat.cols+10,0), cv::Scalar(0, 255, 255), 1);
+	}
+	else{
+		cv::line(drawMat, cv::Point(grayMat.cols-1, 0), cv::Point(grayMat.cols-1,10), cv::Scalar(0, 255, 255), 1);
+		cv::line(drawMat, cv::Point(grayMat.cols-1, 0), cv::Point(grayMat.cols-1-10, 0), cv::Scalar(0, 255, 255), 1);
+		
+		cv::line(drawMat, cv::Point(grayMat.cols*2-1, 0), cv::Point(grayMat.cols*2-1,10), cv::Scalar(0, 255, 255), 1);
+		cv::line(drawMat, cv::Point(grayMat.cols*2-1, 0), cv::Point(grayMat.cols*2-1-10,0), cv::Scalar(0, 255, 255), 1);
+
+	}
+
 
 	if( mouse_xpos >= 0 && mouse_ypos >= VIEW_INFO_UPPER_SIZE && mouse_ypos < grayMat.rows + VIEW_INFO_UPPER_SIZE )
 	{
 		int tofcam_XPos;
 		int tofcam_YPos;
-		int width_div = getWidth()/getVideoWidth();
-		int height_div = getHeight()/getVideoHeight();
 
 		mouse_ypos -= VIEW_INFO_UPPER_SIZE;
 
@@ -305,7 +373,11 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 			cv::line(drawMat, cv::Point(mouse_xpos-x_limit_left, mouse_ypos), cv::Point(mouse_xpos+x_limit_right, mouse_ypos), cv::Scalar(255, 255, 0), 2);
 			cv::line(drawMat, cv::Point(mouse_xpos, mouse_ypos-y_limit_left), cv::Point(mouse_xpos, mouse_ypos+y_limit_right), cv::Scalar(255, 255, 0), 2);
 			
-			tofcam_XPos = mouse_xpos/width_div;
+			if( isRotate90() == false )
+				tofcam_XPos = mouse_xpos/width_div;
+			else
+				tofcam_YPos = (getWidth()-mouse_xpos)/width_div;
+				
 		}
 		else{
 
@@ -320,15 +392,21 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 			cv::line(drawMat, cv::Point(mouse_xpos-x_limit_left, mouse_ypos), cv::Point(mouse_xpos+x_limit_right, mouse_ypos), cv::Scalar(255, 255, 0), 2);
 			cv::line(drawMat, cv::Point(mouse_xpos, mouse_ypos-y_limit_left), cv::Point(mouse_xpos, mouse_ypos+y_limit_right), cv::Scalar(255, 255, 0), 2);
 
-			tofcam_XPos = (mouse_xpos-getWidth())/width_div;
+			if( isRotate90() == false )
+				tofcam_XPos = (mouse_xpos-getWidth())/width_div;
+			else
+				tofcam_YPos = (getWidth()-(mouse_xpos-getWidth()))/width_div;
 		}
 
-		tofcam_YPos = mouse_ypos/height_div;
+		if( isRotate90() == false )
+			tofcam_YPos = mouse_ypos/height_div;
+		else
+			tofcam_XPos = mouse_ypos/height_div;
 
-		int dist_pos = tofcam_YPos*getVideoWidth() + tofcam_XPos;
-		if( isRotate90() ){
-			dist_pos = ((getVideoWidth()-1-tofcam_XPos))*getVideoHeight() + (tofcam_YPos);
-		}
+		int dist_pos;
+		
+		if( isRotate90() == false ) dist_pos = tofcam_YPos*getVideoWidth() + tofcam_XPos;
+		else dist_pos = tofcam_YPos*getVideoHeight() + tofcam_XPos;
 
 		dist_caption = cv::format("X:%d, Y:%d, %s", tofcam_XPos, tofcam_YPos, getDistanceString(appCfg->pDistanceTable[dist_pos]).c_str());
 	}
@@ -354,9 +432,24 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 		defaultInfoCap3 = cv::format("frame rate    :      %d fps", appCfg->displayFps);
 	}
 
-	putText(viewInfo, defaultInfoCap1.c_str(), cv::Point(245, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
-	putText(viewInfo, defaultInfoCap2.c_str(), cv::Point(90, 90), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
-	putText(viewInfo, defaultInfoCap3.c_str(), cv::Point(90, 125), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+	if( width_div == 2 ){
+		putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(340, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+		putText(viewInfoLower, defaultInfoLower.c_str(), cv::Point(780, 26), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(0, 0, 0));
+
+		putText(viewInfo, defaultInfoCap1.c_str(), cv::Point(245, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+		putText(viewInfo, defaultInfoCap2.c_str(), cv::Point(90, 90), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+		putText(viewInfo, defaultInfoCap3.c_str(), cv::Point(90, 125), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+	}
+	else{
+		defaultInfoCap1 = cv::format("<%s>             <Distance>", getLeftViewName().c_str());
+		
+		putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(170, 35), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
+		putText(viewInfoLower, defaultInfoLower.c_str(), cv::Point(390, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 0));
+
+		putText(viewInfo, defaultInfoCap1.c_str(), cv::Point(100, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
+		putText(viewInfo, defaultInfoCap2.c_str(), cv::Point(45, 90), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
+		putText(viewInfo, defaultInfoCap3.c_str(), cv::Point(45, 125), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
+	}
 	
 #ifdef HAVE_CV_CUDA
 	cv::cuda::GpuMat gpuUpper(viewInfoUpper), gpuView(viewInfo), gpuLower(viewInfoLower), gpuImage(drawMat), gpuVconcat(drawMat.rows+viewInfoUpper.rows+viewInfoLower.rows+viewInfo.rows, drawMat.cols, drawMat.type());
@@ -376,16 +469,17 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 	drawPointCloud();
 
 	std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
-	double time_all = (curTime - fpsTime).count() / 1000000.0;
+	double frame_time = (curTime - frameTime).count() / 1000000.0;
+	double fps_time = (curTime - fpsTime).count() / 1000000.0;
 
-	clock_t end = std::clock();
 	appCfg->fpsCount++;
 
-	if( (end-second_time) >= 1000.0f ){
+	if( fps_time >= 1000.0f ){
 		appCfg->displayFps = appCfg->fpsCount;
-		printf("sample %d fps time = %.3f\n", appCfg->displayFps, time_all);
+
+		printf("sample %d fps time = %.3f/%.3f\n", appCfg->displayFps, frame_time, fps_time);
 		appCfg->fpsCount = 0;
-		second_time = end;
+		fpsTime = curTime;
 	}
 
 	return;
@@ -403,7 +497,7 @@ void videoSource::stopLidar()
 bool videoSource::captureLidar( int timeout, CaptureOptions *pAppCfg )
 {
 	ImageFrame *camImage = NULL;	
-	fpsTime = std::chrono::steady_clock::now();
+	frameTime = std::chrono::steady_clock::now();
 	bool ret = Capture((void **)&camImage, timeout);
 
 	if( ret ){

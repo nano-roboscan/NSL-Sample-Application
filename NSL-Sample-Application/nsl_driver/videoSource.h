@@ -38,11 +38,13 @@ private:
 	std::string cntStringCap, timeStringCap;
 
 	std::chrono::steady_clock::time_point timeDelay;
+	std::chrono::steady_clock::time_point frameTime;
 	std::chrono::steady_clock::time_point fpsTime;
 	clock_t beginTime, endTime ;
-	clock_t second_time;
 
 	std::atomic<int> x_start, y_start;
+	cv::dnn::Net dnnNet;
+	float conf_threshold;
 
 
 public:
@@ -52,6 +54,8 @@ public:
 	int prockey(CaptureOptions *appCfg);
 	void stopLidar();
 	void drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *appCfg);
+	void initDeepLearning( void );
+	void deepLearning( cv::Mat imageLidar );
 
 	///////////////////// virtual interface ////////////////////////////////////////////////////////////////
 	/**
@@ -65,6 +69,8 @@ public:
 	virtual std::string getDistanceString(int distance ) = 0;
 	virtual int getVideoWidth() = 0;
 	virtual int getVideoHeight() = 0;	
+	virtual int getWidthDiv() = 0;
+	virtual int getHeightDiv() = 0;
 	virtual int getWidth() = 0;
 	virtual int getHeight() = 0;
 	virtual bool isRotate90() = 0;	

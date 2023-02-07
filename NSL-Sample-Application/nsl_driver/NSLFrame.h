@@ -46,7 +46,7 @@ typedef pthread_mutex_t CRITICAL_SECTION;
 
 enum networkModelType_{
 	NONEMODEL_TYPE,
-	YOLO_TYPE,
+	SSD_TYPE,
 	MAX_TYPE
 };
 
