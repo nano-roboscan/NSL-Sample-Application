@@ -16,7 +16,7 @@
 
 
 ## WINDOWS 컴파일 방법
-- Visual stude 2019에서 테스트 되었습니다.
+- Visual studio 2019에서 테스트 되었습니다.
 - PCL-1.8.1-AllInOne-msvc2017-win64.exe 및 opencv 를 먼저 설치 후 사용 하십시오.
 
 ## LINUX 컴파일 방법
