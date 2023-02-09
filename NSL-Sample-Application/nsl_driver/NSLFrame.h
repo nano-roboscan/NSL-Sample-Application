@@ -23,8 +23,7 @@
 #ifndef __NSL_FRAME_H__
 #define __NSL_FRAME_H__
 
-
-#define HAVE_CV_CUDA
+//#define HAVE_CV_CUDA
 
 #define HDR_NONE_MODE 		0
 #define HDR_SPATIAL_MODE 	1

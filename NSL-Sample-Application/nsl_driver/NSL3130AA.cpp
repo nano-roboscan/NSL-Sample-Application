@@ -1420,7 +1420,7 @@ void NSL3130AA::rxSocket(uint8_t *socketbuff, int buffLen)
 		int state = select(tofcamInfo.data_sock+1, &readfds, NULL, NULL, &timeout);
 #endif
 		if( state == 0 || state == -1 ){  //timeout , error
-			printf("rxSock datagrame no response state = %d sock = %lld\n", state, tofcamInfo.data_sock);
+			printf("rxSock datagrame no response state = %d sock = %d\n", state, tofcamInfo.data_sock);
 			return;
 		}
 #endif		

@@ -1863,7 +1863,7 @@ bool NSL1110AA::Capture( void** output, int timeout )
 			std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
 			double passed_time = (curTime - begin).count() / 1000000.0;
 			if( passed_time > timeout ){
-				printf("timeout capture~~~~~~~ timeout = %lld / %d\n", passed_time, timeout);
+				printf("timeout capture~~~~~~~ timeout = %d\n", timeout);
 				return false;
 			}
 
