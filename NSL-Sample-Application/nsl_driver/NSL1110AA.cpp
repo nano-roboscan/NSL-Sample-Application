@@ -1759,7 +1759,7 @@ bool NSL1110AA::Capture( void** output, int timeout )
 	if( !output )
 		return false;
 
-	clock_t begin = std::clock();
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 	int frame_cnt = 0;
 	while(!exit_thtread)
@@ -1860,9 +1860,8 @@ bool NSL1110AA::Capture( void** output, int timeout )
 		else{
 			Sleep(10);
 
-			clock_t end = std::clock();
-
-			time_t passed_time = (end-begin)/1000;
+			std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
+			double passed_time = (curTime - begin).count() / 1000000.0;
 			if( passed_time > timeout ){
 				printf("timeout capture~~~~~~~ timeout = %lld / %d\n", passed_time, timeout);
 				return false;
@@ -1881,13 +1880,13 @@ bool NSL1110AA::Capture( void** output, int timeout )
 // closeLidar
 void NSL1110AA::closeLidar()
 {
-	printf("->DME close()~~ exit_thtread = %d\n", exit_thtread);
+	printf("->closeLidar()~~ exit_thtread = %d\n", exit_thtread);
 
 	tofcamInfo.captureNetType = NONEMODEL_TYPE;
 
 	waitClosingThread();
 
-	printf("<-DME close()~~ exit_thtread = %d\n", exit_thtread);
+	printf("<-closeLidar()~~ exit_thtread = %d\n", exit_thtread);
 }
 
 

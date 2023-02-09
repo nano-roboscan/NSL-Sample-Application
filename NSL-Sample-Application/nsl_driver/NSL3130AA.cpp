@@ -1931,7 +1931,7 @@ bool NSL3130AA::Capture( void** output, int timeout )
 	if( !output )
 		return false;
 
-	clock_t begin = std::clock();
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	
 	int frame_cnt = 0;
 	while(!exit_thtread)
@@ -2025,11 +2025,12 @@ bool NSL3130AA::Capture( void** output, int timeout )
 
 		}
 		else{
-			clock_t end = std::clock();
-
-			time_t passed_time = (end - begin) / 1000;
+			Sleep(10);
+			
+			std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
+			double passed_time = (curTime - begin).count() / 1000000.0;
 			if( passed_time > timeout ){
-				printf("timeout capture~~~~~~~ timeout = %lld / %d\n", passed_time, timeout);
+				printf("timeout capture~~~~~~~ timeout = %d\n", timeout);
 				return false;
 			}
 
@@ -2044,8 +2045,6 @@ bool NSL3130AA::Capture( void** output, int timeout )
 // closeLidar
 void NSL3130AA::closeLidar()
 {
-	printf("Tofcam close()~~ exit_thtread = %d\n", exit_thtread);
-
 	tofcamInfo.captureNetType = NONEMODEL_TYPE;
 
 	if( exit_thtread == 0 ){
@@ -2072,7 +2071,6 @@ void NSL3130AA::closeLidar()
 		}
 	}
 
-	printf("End Tofcam close()~~ exit_thtread = %d\n", exit_thtread);
 }
 
 void NSL3130AA::startCaptureCommand(int netType, void *pCapOption )
