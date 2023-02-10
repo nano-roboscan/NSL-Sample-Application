@@ -16,5 +16,5 @@ find_package(Threads REQUIRED)
 #sample
 add_executable(nsl-dev main.cpp nsl_driver/NSL1110AA.cpp nsl_driver/NSL3130AA.cpp nsl_driver/videoSource.cpp nsl_driver/lens_transform.cpp nsl_driver/NSL1110AA.h nsl_driver/NSL3130AA.h nsl_driver/NSLFrame.h nsl_driver/videoSource.h nsl_driver/lens_transform.h)
 target_link_libraries(nsl-dev ${OpenCV_LIBS} Threads::Threads)
-
 target_include_directories(nsl-dev PRIVATE nsl_driver)
+
