@@ -70,34 +70,47 @@ videoSource::~videoSource()
 
 /////////////////////////////////////// static function ///////////////////////////////////////////////////////////
 
-/*
-# DEVICE_TYPE : 0 : NSL-1110AA, 1 : NSL-3130AA
-# ETH_TYPE : 0 : ethernet , 1 : USB
-# NET_TYPE : 0 : SSD-MobilenetV2, 1 : YoloV3, 2 : YoloV4, 3 : YoloV5-TRT
-# INPUT_SIZE : 0 : 320, 1 : 416
+void print_help()
+{
+	printf("-nslType : 0 : NSL-1110AA, 1 : NSL-3130AA\n");
+	printf("-captureType : 0 : AMPLITUDE_DISTANCE, 1 : AMPLITEDE_DISTANCE_EX_MODE, 2 : DISTANCE_GRAYSCALE_MODE\n");
+	printf("-maxDistance : 0 ~ 12500\n");
+	printf("-intTime : 0 ~ 4000\n");
+	printf("-grayintTime : 0 ~ 50000\n");
+	printf("-amplitudeMin : 30 ~ 1000\n");
+	printf("-edgeThresHold : 0=disable, 1~5000\n");
+	printf("-medianFilterEnable : 0=disable, 1=enable\n");
+	printf("-medianFilter : 0=disable, 1~99\n");
+	printf("-medianIter : 0=disable, 1~10000\n");
+	printf("-gaussIter : 0=disable, 1~10000\n");
+	printf("-averageFilterEnable : 0=disable, 1=enable\n");
+	printf("-temporalFactor : 0=disable, 1~1000\n");
+	printf("-temporalThresHold : 0=disable, 1~1000\n");
+	printf("-interferenceEnable : 0=disable, 1=enable\n");
+	printf("-interferenceLimit : 0=disable, 1~1000\n");
+}
 
-# maxDetectingCnt : 1, 2 ... 10
-# showGuide : 0=disable, 1=enable (detector/discard_area.txt)
-# showConvertColor : 0=disable, 1=enable (detector/convert_area.txt)
-# showMini : 0=disable, 1=enable (show detected mini box)
-# resetTime : 3600 x 10 : 10 hours
-# captureType : 0 ~ 2
+/*
+# -nslType : 0 : NSL-1110AA, 1 : NSL-3130AA
+# -captureType : 0 ~ 2
 #  0	AMPLITEDE_DISTANCE_MODE
 #  1	AMPLITEDE_DISTANCE_EX_MODE
 #  2	DISTANCE_GRAYSCALE_MODE
-# detectDistance : 0 ~ 12500
-# maxDistance : 0 ~ 12500
-# intTime : 50 ~ 4000
-# grayintTime : 50 ~ 40000
-# threshold : 0.1 ~ 0.9
-# overlay : 0=disable, 1=enable
-# amplitudeMin : 30 ~ 1000
-# edgeThresHold : 0=disable, 1~10000
-# medianFilter : 0=disable, 1~99
-# medianIter : 0=disable, 1~10000
-# gaussIter :  0=disable, 1~10000
+# -maxDistance : 0 ~ 12500
+# -intTime : 50 ~ 4000
+# -grayintTime : 50 ~ 50000
+# -amplitudeMin : 30 ~ 1000
+# -edgeThresHold : 0=disable, 1~5000
+# -medianFilterEnable :  0=disable, 1=enable
+# -medianFilter : 0=disable, 1~99
+# -medianIter : 0=disable, 1~10000
+# -gaussIter :  0=disable, 1~10000
+# -averageFilterEnable :  0=disable, 1=enable
+# -temporalFactor :  0=disable, 1~1000
+# -temporalThresHold :  0=disable, 1~1000
+# -interferenceEnable :  0=disable, 1=enable
+# -interferenceLimit :  0=disable, 1~1000
 */
-
 videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pAppCfg)
 {
 	memset(pAppCfg, 0, sizeof(CaptureOptions));
@@ -128,6 +141,12 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	pAppCfg->temporalFilterThreshold = find_int_arg(argc, argv, "-temporalThresHold", 0);
 	pAppCfg->interferenceUseLashValueEnable = find_int_arg(argc, argv, "-interferenceEnable", 0);
 	pAppCfg->interferenceLimit = find_int_arg(argc, argv, "-interferenceLimit", 0);
+	int help_print = find_int_arg(argc, argv, "-help", 0);
+
+	if( help_print != 0 ){
+		print_help();
+	}
+
 
 	if( pAppCfg->inputSize == 0 ) pAppCfg->inputSize = 320;
 	else if( pAppCfg->inputSize == 1 ) pAppCfg->inputSize = 416;
