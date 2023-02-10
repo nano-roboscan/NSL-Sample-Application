@@ -95,6 +95,11 @@ using namespace cv;
 #define ADJUST_ROI_YMIN		60
 #define ADJUST_ROI_YMAX		179
 
+#define USB_CODE_ANSWER		0
+#define USB_CODE_DATA		1
+#define USB_CODE_TRACE		2
+#define USB_CODE_DEBUG		3
+
 
 #define _unused(x) 			((void)(x))
 
@@ -361,7 +366,7 @@ int NSL3130AA::processSerialData(uint8_t *tempBuffer, int recvedLen, int resp_id
 	if( tofcamInfo.receivedBytes < 6 ) return 0;
 
 	uint32_t expectedSize = getHeaderUint32(response[resp_idx], 2);	// INDEX_DATA_SIZE
-    if ((expectedSize > TOF660_BUFF_SIZE) || (expectedSize < 0)){
+    if ( expectedSize > TOF660_BUFF_SIZE ){
 		printf("err::processSerialData :: expectedSize = %u rxSize = %d recvedLen = %d\n", expectedSize, tofcamInfo.receivedBytes, recvedLen);
 		tofcamInfo.actualNumber = 0;
 		tofcamInfo.receivedBytes = 0;
@@ -385,22 +390,19 @@ int NSL3130AA::processUpdData(uint8_t *tempBuffer, int recvedLen, int resp_idx)
 	uint32_t offset = tempBuffer[8]<<24|tempBuffer[9]<<16|tempBuffer[10]<<8|tempBuffer[11];//getHeaderUint32(tempBuffer, 8);
 	uint32_t numPacket = tempBuffer[12]<<24|tempBuffer[13]<<16|tempBuffer[14]<<8|tempBuffer[15];//getHeaderUint32(tempBuffer, 12);
 	uint32_t packetNumber = tempBuffer[16]<<24|tempBuffer[17]<<16|tempBuffer[18]<<8|tempBuffer[19];//getHeaderUint32(tempBuffer, 16);
-	static uint32_t prevPNumber = 0;
 	
 	//A new data number is received, so clear anything
 	if (number != tofcamInfo.actualNumber)
 	{
 		if( tofcamInfo.actualNumber != -1 ){
 			char dbgbuff[100];
-			sprintf(dbgbuff,"actual = %d number = %d/%d packetNumber = %d/%d\n", tofcamInfo.actualNumber, number, numPacket, prevPNumber, packetNumber);
+			sprintf(dbgbuff,"actual = %d number = %d/%d packetNumber = %d\n", tofcamInfo.actualNumber, number, numPacket, packetNumber);
 			puts(dbgbuff);
 		}
 		tofcamInfo.actualNumber = number;
 		tofcamInfo.receivedBytes = 0;
 	}
 
-	prevPNumber = packetNumber;
-	
 	//Store the received frame at the required offset
 	memcpy(&response[resp_idx][tofcamInfo.receivedBytes], &tempBuffer[UDP_PACKET_HEADER_SIZE], payloadSize);
 	tofcamInfo.receivedBytes += payloadSize;
@@ -1440,7 +1442,7 @@ void NSL3130AA::rxSocket(uint8_t *socketbuff, int buffLen)
 		const auto& time_cap1 = std::chrono::steady_clock::now();
 		double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
 //		printf("  Tofcam-Rx:		   %9.3lf [msec] len = %d\n", time_cam, totalLen);		// 75ms
-#if 1
+
 		EnterCriticalSection(&tofcamBuff.lock);
 
 		tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0; 				
@@ -1449,7 +1451,6 @@ void NSL3130AA::rxSocket(uint8_t *socketbuff, int buffLen)
 		ADD_TOFCAM_BUFF(tofcamBuff, TOFCAM_ETH_BUFF_SIZE);
 
 		LeaveCriticalSection(&tofcamBuff.lock);
-#endif
 	}
 	
 }
@@ -1507,7 +1508,7 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
 	{
 		unsigned int type = response[1][1];
 
-		if( type == 1 ){
+		if( type == USB_CODE_DATA ){
 			EnterCriticalSection(&tofcamBuff.lock);
 
 			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
@@ -1518,14 +1519,13 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
 			LeaveCriticalSection(&tofcamBuff.lock);
 		}
 		else{
-			printf("err recv data type = [%x]%d totalLen = %d recv = %d\n", response[1][0], type, totalLen, tofcamInfo.receivedBytes);
+			printf("other data type = [%x]%d totalLen = %d recv = %d\n", response[1][0], type, totalLen, tofcamInfo.receivedBytes);
 		}
 
 		if( tofcamInfo.receivedBytes > totalLen ){
 			memmove(response[1], &response[1][totalLen], tofcamInfo.receivedBytes-totalLen);
 			tofcamInfo.receivedBytes -= totalLen;
-
-			printf("memmove recv = %d\n", tofcamInfo.receivedBytes);
+			//printf("memmove recv = %d\n", tofcamInfo.receivedBytes);
 		}
 		else{
 			tofcamInfo.receivedBytes = 0;

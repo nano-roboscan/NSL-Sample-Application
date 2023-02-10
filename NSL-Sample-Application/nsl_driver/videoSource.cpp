@@ -344,7 +344,7 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 
 //	printf("grayMat.row = %d col = %d\n", grayMat.rows, grayMat.cols);
 
-
+#if 1
 	cv::Mat drawMat;
 #ifdef HAVE_CV_CUDA
 	cv::cuda::GpuMat gpuGrayImage(grayMat), gpuDistImage(distMat), gpuHconcat (grayMat.rows, grayMat.cols * 2, grayMat.type());
@@ -507,6 +507,7 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 
     cv::imshow(WIN_NAME, drawMat);
 	drawPointCloud();
+#endif
 
 	std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
 	double frame_time = (curTime - frameTime).count() / 1000000.0;
