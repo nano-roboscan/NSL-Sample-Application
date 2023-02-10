@@ -145,53 +145,6 @@ static int maxValidValue = 15000;
 
 static const int indexAmplitudeFactorColor = TOF660_NUM_COLORS / maxAmplitudeValue;
 
-/*
-	length 4byte 이후부터 
-	data index 0, 1 = opcode
-	data index 2 ~ = data 시작 
-	{
-		const uint16_t COMMAND_SET_ROI = 0;                                            ///<Set the ROI
-		const uint16_t COMMAND_SET_INT_TIMES = 1;                                      ///<Set the integration times (all at once)
-		const uint16_t COMMAND_GET_DISTANCE_AMPLITUDE = 2;                             ///<Get distance and amplitude (single or stream)
-		const uint16_t COMMAND_GET_DISTANCE = 3;                                       ///<Get distance (single or stream)
-		const uint16_t COMMAND_GET_GRAYSCALE = 5;                                      ///<Get grayscale (single or stream)
-		const uint16_t COMMAND_STOP_STREAM = 6;                                        ///<Stop the stream
-		const uint16_t COMMAND_GET_DCS = 7;                                            ///<Get DCS data (single or stream)
-		const uint16_t COMMAND_GET_DISTANCE_GRAYSCALE = 8;                             ///<Get distance and GRAYSCALE (single or stream) :: seobi add
-		const uint16_t COMMAND_SET_OFFSET = 20;                                        ///<Set the offset
-		const uint16_t COMMAND_SET_MIN_AMPLITUDE = 21;                                 ///<Set the minimal amplitude
-		const uint16_t COMMAND_SET_FILTER = 22;                                        ///<Set the filter settings (all at once)
-		const uint16_t COMMAND_SET_MODULATION = 23;                                    ///<Set the modulation settings
-		const uint16_t COMMAND_SET_BINNING = 24;                                       ///<Set the binning settings
-		const uint16_t COMMAND_SET_HDR = 25;                                           ///<Set the HDR settings
-		const uint16_t COMMAND_SET_SHUTTER_MODE = 26;                                  ///<Set the shutter mode
-		const uint16_t COMMAND_SET_ABS = 27;                                           ///<Set the ABS (enable/disable)
-		const uint16_t COMMAND_SET_COMPENSATION = 28;                                  ///<Set the compensations (enable/disable)
-		const uint16_t COMMAND_SET_DLL_STEP = 29;                                      ///<Set the DLL step
-		const uint16_t COMMAND_SHUTTER = 100;                                          ///<Force a shutter (in case of external shutter)
-		const uint16_t COMMAND_CALIBRATE = 30;                                         ///<Calibrate DRNU
-		const uint16_t COMMAND_CALIBRATE_PRODUCTION = 31;                              ///<Calibrate for production
-		const uint16_t COMMAND_DELETE_CALIBRATION = 32;                                ///<Delete the calibration data
-		const uint16_t COMMAND_DEBUG = 33;                                             ///<Debug command with different sub commands
-		const uint16_t COMMAND_CALIBRATE_GRAYSCALE = 34;                               ///<Calibrate Grayscale
-		const uint16_t COMMAND_CALIBRATE_AMBIENT_LIGHT = 35;                           ///<Calibrate Ambient Light
-		const uint16_t COMMAND_READ_CHIP_INFORMATION = 36;                             ///<Read chip ID and wafer ID
-		const uint16_t COMMAND_READ_FIRMWARE_RELEASE = 37;                             ///<Read firmware release
-		const uint16_t COMMAND_GET_TEMPERATURE = 0x4A;                              		///<Command to read the temperature dec 74
-		const uint16_t COMMAND_SET_DATA_IP_ADDRESS = 38;                               ///<Set the IP address of the data
-		const uint16_t COMMAND_SET_GRAYSCALE_ILLUMINATION = 39;  						///<Configure illumination during grayscale acquisition
-		const uint16_t COMMAND_SET_CAMERA_IP_SETTINGS= 40;
-		const uint16_t COMMAND_SET_CAMERA_MAC_ADDRESS= 41;
-		const uint16_t COMMAND_WRITE_REGISTER= 42;
-		const uint16_t COMMAND_READ_REGISTER= 43;
-		const uint16_t COMMAND_SEND_FIRMWARE_UPDATE = 200;                             ///<Send firmware update file
-		const uint16_t COMMAND_IO_RESET = 44;											   ///<reset chip in case of NACK
-		const uint16_t COMMAND_SYSTEM_RESET = 45;										   ///<system reset
-		const uint16_t COMMAND_PSU_5V_ENABLE = 46;										   ///<psu 5v enable
-		const uint16_t COMMAND_PSU_5V_DISABLE = 47;										   ///<psu 5v disable
-		const uint16_t COMMAND_JUMP_TO_BOOTLOADER = 111;									/// Jump to Bootloader
-	}
-*/
 static uint8_t initialCode660[][100]={	
 //	 | ------- start marker --------| |--- length(opcode+data) -----| |-- opcode--| |------- data feild -----------| |-------- end marker --------|
 	// COMMAND_SET_INT_TIMES :: int3d(800),  int3d1(100), int3d2(50), grayint(100)
