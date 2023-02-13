@@ -168,10 +168,10 @@ videoSource* videoSource::Create( int type, char *ipaddr )
 {
 	videoSource* src = NULL;
 
-	if( type == 0 ){
+	if( type == NSL1110_TYPE ){
 		src = NSL1110AA::Create(ipaddr);
 	}
-	else if( type == 1 ){
+	else {//if( type == NSL3130_TYPE ){
 		src = NSL3130AA::Create(ipaddr);
 	}
 
