@@ -345,10 +345,8 @@ void LensTransform::initLensDistortionTable(enum LensType nLensType)
 		lensData.rp[	45	] = 	4.5 ;
 	}
 
-	if( lensKoef > 1.0f ){
-		for(int i=0; i<lensTableSize; i++)
-			lensData.angle[i] *= lensKoef;
-	}
+	for(int i=0; i<lensTableSize; i++)
+		lensData.angle[i] *= lensKoef;
 
 	initTransformTable(0.02, 320, 240, 0, 0);
 
@@ -380,11 +378,22 @@ double LensTransform::getAngle(double x, double y, double sensorPointSizeMM)
 
 void LensTransform::transformPixel(int srcX, int srcY, double srcZ, double &destX, double &destY, double &destZ, double sin_angle, double cos_angle)
 {        
-	transformPixelTable(srcX, srcY, srcZ, destX, destY, destZ, sin_angle, cos_angle);
+    if(sin_angle == 0.0 ){
+        destY = srcZ * lensData.yUA[srcX][srcY];
+        destX = srcZ * lensData.xUA[srcX][srcY];
+        destZ = srcZ * lensData.zUA[srcX][srcY];
+    }else{
+
+        double y = srcZ * lensData.yUA[srcX][srcY];
+        double z = srcZ * lensData.zUA[srcX][srcY];
+        destX    = srcZ * lensData.xUA[srcX][srcY];
+        destY = z * sin_angle + y * cos_angle;
+        destZ = z * cos_angle - y * sin_angle;
+    }
 }
 
 void LensTransform::transformPixelTable(unsigned int srcX, unsigned int srcY, double srcZ, double &destX, double &destY, double &destZ, double sin_angle, double cos_angle)
-{ // WIDE_FIELD
+{
     if(sin_angle == 0.0 ){
         destY = srcZ * lensData.yUA[srcX][srcY];
         destX = srcZ * lensData.xUA[srcX][srcY];
@@ -400,7 +409,7 @@ void LensTransform::transformPixelTable(unsigned int srcX, unsigned int srcY, do
 }
 
 void LensTransform::transformPixelPolynom(unsigned int srcX, unsigned int srcY, double srcZ, double &destX, double &destY, double &destZ, double sin_angle, double cos_angle)
-{ // STANDARD_FIELD
+{
     if(sin_angle == 0.0 ){
 		destY = srcZ  * lensData.yUA[srcX][srcY];
         destX = destY * lensData.xUA[srcX][srcY];
@@ -415,7 +424,7 @@ void LensTransform::transformPixelPolynom(unsigned int srcX, unsigned int srcY, 
 }
 
 void LensTransform::transformPixelCalib(unsigned int srcX, unsigned int srcY, double srcZ, double &destX, double &destY, double &destZ, double sin_angle, double cos_angle)
-{//NARROW_FIELD
+{
 
     if(sin_angle == 0.0 ){
         destY = srcZ * lensData.yUA[srcX][srcY];
