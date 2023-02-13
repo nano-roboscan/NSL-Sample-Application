@@ -124,9 +124,9 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	pAppCfg->inputSize = find_int_arg(argc, argv, "-inputSize", 0); // 0 : 320, 1 : 416
 	pAppCfg->detectThreshold = find_float_arg(argc, argv, "-thresh", .4);
 
-	pAppCfg->captureType = find_int_arg(argc, argv, "-captureType", 1);//1;
+	pAppCfg->captureType = find_int_arg(argc, argv, "-captureType", 1);//0 ~ 2
 	pAppCfg->integrationTime = find_int_arg(argc, argv, "-intTime", 800);//800;
-	pAppCfg->grayIntegrationTime = find_int_arg(argc, argv, "-grayintTime", 100);//800;
+	pAppCfg->grayIntegrationTime = find_int_arg(argc, argv, "-grayintTime", 100);//100;
 	pAppCfg->maxDistance = find_int_arg(argc, argv, "-maxDistance", 12500);
 	pAppCfg->minAmplitude = find_int_arg(argc, argv, "-amplitudeMin", 50);
 
@@ -462,34 +462,15 @@ void videoSource::drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *
 	std::string defaultInfoCap1 = cv::format("<%s>                           <Distance>", getLeftViewName().c_str());
 
 	
-	if( dist_caption.length() > 0 ){
-		std::string detecTimeCap = cntStringCap.length() > 0 ? cntStringCap : timeStringCap;
-		defaultInfoCap2 = cv::format("position       :     %s %s", detecTimeCap.c_str(), dist_caption.c_str());
-		defaultInfoCap3 = cv::format("frame rate    :      %d fps", appCfg->displayFps);
-	}
-	else{
-		defaultInfoCap2 = cv::format("position       :     %s", timeStringCap.c_str());
-		defaultInfoCap3 = cv::format("frame rate    :      %d fps", appCfg->displayFps);
-	}
+	defaultInfoCap2 = cv::format("position       :     %s", dist_caption.c_str());
+	defaultInfoCap3 = cv::format("frame rate    :     %d fps", appCfg->displayFps);
 
-	if( width_div == 2 ){
-		putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(340, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
-		putText(viewInfoLower, defaultInfoLower.c_str(), cv::Point(780, 26), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(0, 0, 0));
+	putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(340, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+	putText(viewInfoLower, defaultInfoLower.c_str(), cv::Point(780, 26), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(0, 0, 0));
 
-		putText(viewInfo, defaultInfoCap1.c_str(), cv::Point(245, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
-		putText(viewInfo, defaultInfoCap2.c_str(), cv::Point(90, 90), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
-		putText(viewInfo, defaultInfoCap3.c_str(), cv::Point(90, 125), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
-	}
-	else{
-		defaultInfoCap1 = cv::format("<%s>             <Distance>", getLeftViewName().c_str());
-		
-		putText(viewInfoUpper, defaultInfoTitle.c_str(), cv::Point(170, 35), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
-		putText(viewInfoLower, defaultInfoLower.c_str(), cv::Point(390, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 0));
-
-		putText(viewInfo, defaultInfoCap1.c_str(), cv::Point(100, 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
-		putText(viewInfo, defaultInfoCap2.c_str(), cv::Point(45, 90), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
-		putText(viewInfo, defaultInfoCap3.c_str(), cv::Point(45, 125), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
-	}
+	putText(viewInfo, defaultInfoCap1.c_str(), cv::Point(245, 35), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+	putText(viewInfo, defaultInfoCap2.c_str(), cv::Point(90, 90), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
+	putText(viewInfo, defaultInfoCap3.c_str(), cv::Point(90, 125), cv::FONT_HERSHEY_COMPLEX, 1, cv::Scalar(255, 255, 255));
 	
 #ifdef HAVE_CV_CUDA
 	cv::cuda::GpuMat gpuUpper(viewInfoUpper), gpuView(viewInfo), gpuLower(viewInfoLower), gpuImage(drawMat), gpuVconcat(drawMat.rows+viewInfoUpper.rows+viewInfoLower.rows+viewInfo.rows, drawMat.cols, drawMat.type());

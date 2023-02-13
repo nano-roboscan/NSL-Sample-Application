@@ -825,7 +825,7 @@ uint8_t NSL3130AA::getCommandByType( int modeType )
 		case DISTANCE_MODE:
 			cmd = 0x03;
 			break;
-		case DISTANCE_GRAYSCALE_MODE: // nxp 수정후 사용 가능 
+		case DISTANCE_GRAYSCALE_MODE:
 			cmd = 0x08;
 			break;
 		case GRAYSCALE_MODE:
@@ -935,7 +935,7 @@ int NSL3130AA::reqStreamingFrame(SOCKET control_sock)
 {
 	uint8_t data[10] = {0x00, 0x02, VALUE_STREAMING_MEASUREMENT}; // get distance & amplitude
 	uint32_t data_len = 3;	
-	int cmdType = getCommandByType(tofcamInfo.tofcamModeType);	
+	uint8_t cmdType = getCommandByType(tofcamInfo.tofcamModeType);	
 
 	data[1] = cmdType;
 
@@ -1948,7 +1948,7 @@ bool NSL3130AA::Capture( void** output, int timeout )
 				cv::resize( image, resizeFrame, cv::Size( 480, 640 ) );
 				cv::resize( imageDist, resizeDist, cv::Size( 480, 640 ));
 			}
-			else{	// poseNet, imagenet
+			else{
 				cv::resize( image, resizeFrame, cv::Size( tofcamInfo.width, tofcamInfo.height ) );
 				cv::resize( imageDist, resizeDist, cv::Size( tofcamInfo.width, tofcamInfo.height ));
 			}
