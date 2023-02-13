@@ -350,13 +350,7 @@ void LensTransform::initLensDistortionTable(enum LensType nLensType)
 			lensData.angle[i] *= lensKoef;
 	}
 
-	if(lensType == WIDE_FIELD){
-		initTransformTable(0.02, 320, 240, 0, 0);
-	}else if(lensType == STANDARD_FIELD){
-		initTransformPolynom(0.02, 320, 240);
-	}else{
-		initTransformNarrow(0.02, 320, 240, 0, 0);
-	}
+	initTransformTable(0.02, 320, 240, 0, 0);
 
 }
 
@@ -386,15 +380,7 @@ double LensTransform::getAngle(double x, double y, double sensorPointSizeMM)
 
 void LensTransform::transformPixel(int srcX, int srcY, double srcZ, double &destX, double &destY, double &destZ, double sin_angle, double cos_angle)
 {        
-    if(lensType == WIDE_FIELD){
-        transformPixelTable(srcX, srcY, srcZ, destX, destY, destZ, sin_angle, cos_angle);
-
-    }else if(lensType == STANDARD_FIELD){
-        transformPixelPolynom(srcX, srcY, srcZ, destX, destY, destZ, sin_angle, cos_angle);
-
-    }else{
-        transformPixelCalib(srcX, srcY, srcZ, destX, destY, destZ, sin_angle, cos_angle);
-    }
+	transformPixelTable(srcX, srcY, srcZ, destX, destY, destZ, sin_angle, cos_angle);
 }
 
 void LensTransform::transformPixelTable(unsigned int srcX, unsigned int srcY, double srcZ, double &destX, double &destY, double &destZ, double sin_angle, double cos_angle)
