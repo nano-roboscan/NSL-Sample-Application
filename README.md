@@ -9,7 +9,7 @@
 - WINDOWS의 경우 POINT CLOUD를 위해 PCL-1.8.1-AllInOne-msvc2017-win64.exe 를 사용합니다.
 - 제공되는 OpenCV4.5.4 버전의 설치 경로와 visual studio project 속성의 c++ 및 링커 탭의 패스를 맞추어 주세요.
 - 제공되는 OpenCV4.5.4의 경우 CUDA를 포함합니다.(WINDOWS용임)
-- 별도의 OpenCV를 사용하는 경우 CUDA 옵션에 따라 NSLFrame.h 에서 HAVE_CV_CUDA를 활성화 및 비활성화 하십시오.
+- OpenCV의 CUDA 옵션에 따라 NSLFrame.h 에서 HAVE_CV_CUDA를 활성화 및 비활성화 하십시오.
 - 필요에 따라 PCL DLL 경로를 환경변수에 등록 후 사용하세요.(EXE 파일로 실행하는 경우 DLL 경로 필요)
   - PATH=C:\Program Files\PCL 1.8.1\bin;C:\Program Files\OpenNI2\Redist;%OPENCV_DIR%bin;%PATH%;
 - 해당 제품을 네트워크에 연결 후 사용 가능 하며 아래는 WINDOWS / LINUX 에서 COMPILE 하기 위한 방법입니다.
