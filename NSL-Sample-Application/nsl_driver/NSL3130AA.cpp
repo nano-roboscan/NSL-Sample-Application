@@ -1625,7 +1625,7 @@ void NSL3130AA::keyProc()
 		}
 		else if( tofcamInfo.tofcamEvent_key == 'h' ){
 			printf("-----------------------------------------------\n");
-			printf("p key : Print FPS\n");
+			printf("p key : change Point Cloud\n");
 			printf("b key : change GRAYSCALE mode\n");
 			printf("d key : change DISTANCE & Grayscale mode\n");
 			printf("a key : change AMPLITUDE & DISTANCE mode\n");

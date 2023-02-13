@@ -1440,6 +1440,7 @@ void NSL1110AA::keyProc()
 		else if( tofcamInfo.tofcamEvent_key == 'h' ){
 			tofcamInfo.tofcamEvent_key = 0;
 			printf("-----------------------------------------------\n");
+			printf("p key : change Point Cloud\n");
 			printf("b key : change GRAYSCALE mode\n");
 			printf("d key : change DISTANCE mode\n");
 			printf("a key : change AMPLITUDE & DISTANCE mode\n");
@@ -1449,7 +1450,6 @@ void NSL1110AA::keyProc()
 			printf("l key : change Ambient light corrected\n");
 			printf("s key : change saturation corrected\n");
 			printf("f key : change overflow corrected\n");
-			printf("p key : Print FPS\n");
 			printf("u key : change DRNU(ABS,DRNU,Temp)\n");
 			printf("r key : rotate 90(ROI reset)\n");
 			printf("-----------------------------------------------\n");
