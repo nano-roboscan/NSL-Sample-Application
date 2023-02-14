@@ -117,6 +117,16 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	
 	pAppCfg->minConfidence= 100.0;
 	pAppCfg->maxConfidence = 0;
+
+	// HELP ...
+    for(int i = 0; i < argc; ++i){
+        if(!argv[i]) continue;
+        if(0==strcmp(argv[i], "-help")){
+			print_help();
+			exit(0);
+        }
+    }
+
 	
 	char *ipAddr = find_char_arg(argc, argv, "ipaddr", "192.168.0.220");	
 
@@ -141,11 +151,6 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	pAppCfg->temporalFilterThreshold = find_int_arg(argc, argv, "-temporalThresHold", 0);
 	pAppCfg->interferenceUseLashValueEnable = find_int_arg(argc, argv, "-interferenceEnable", 0);
 	pAppCfg->interferenceLimit = find_int_arg(argc, argv, "-interferenceLimit", 0);
-	int help_print = find_int_arg(argc, argv, "-help", 0);
-
-	if( help_print != 0 ){
-		print_help();
-	}
 
 
 	if( pAppCfg->inputSize == 0 ) pAppCfg->inputSize = 320;
