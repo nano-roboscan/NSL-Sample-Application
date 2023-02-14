@@ -26,5 +26,5 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make
-$ ./nsl-dev or ./nsl-dev -captureType 1 ipaddr 192.168.0.220 or ./nsl-dev -help 1
+$ ./nsl-dev or ./nsl-dev -captureType 1 ipaddr 192.168.0.220 or ./nsl-dev -help
 ```
