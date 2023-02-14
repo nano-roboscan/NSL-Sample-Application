@@ -119,13 +119,13 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	pAppCfg->maxConfidence = 0;
 
 	// HELP ...
-    for(int i = 0; i < argc; ++i){
-        if(!argv[i]) continue;
-        if(0==strcmp(argv[i], "-help")){
+	for(int i = 0; i < argc; ++i){
+		if(!argv[i]) continue;
+		if(0==strcmp(argv[i], "-help")){
 			print_help();
 			exit(0);
-        }
-    }
+		}
+	}
 
 	
 	char *ipAddr = find_char_arg(argc, argv, "ipaddr", "192.168.0.220");	
