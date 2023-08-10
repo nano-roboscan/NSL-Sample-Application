@@ -1366,9 +1366,7 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
     uint8_t buf[4096];
 	int n = 0;
 
-	const auto& time_cap0 = std::chrono::steady_clock::now();
-
-//	printf("start serial-rx\n");
+//	const auto& time_cap0 = std::chrono::steady_clock::now();
 
 	for(int i=0; i< buffLen; i+=n)
 	{
@@ -1379,7 +1377,7 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
 		n = read(tofcamInfo.control_sock, buf, buf_size);
 
 		if(n > 0){						  
-			memcpy(rxArray + i, buf, n);
+			memcpy(socketbuff + i, buf, n);
 		}else if(n == -1){
 			printf("Error on  SerialConnection::readRxData= -1\n");
 			return -1;
@@ -1390,19 +1388,19 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
 
 	}
 
-	const auto& time_cap1 = std::chrono::steady_clock::now();
-	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
+//	const auto& time_cap1 = std::chrono::steady_clock::now();
+//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
 //	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
 
 	if( !exit_thtread && addQue == true )
 	{
-		unsigned int type = rxArray[4];
+		unsigned int type = socketbuff[4];
 
 		if( type == 1 ){
 			pthread_mutex_lock(&tofcamBuff.lock);
 			
 			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
-			memcpy(tofcamBuff.tofcamBuf[tofcamBuff.head_idx], &rxArray[9], buffLen-13);
+			memcpy(tofcamBuff.tofcamBuf[tofcamBuff.head_idx], &socketbuff[9], buffLen-13);
 			tofcamBuff.bufLen[tofcamBuff.head_idx] = buffLen;
 			ADD_TOFCAM_BUFF(tofcamBuff, TOFCAM_ETH_BUFF_SIZE);
 			

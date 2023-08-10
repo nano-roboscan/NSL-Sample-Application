@@ -408,7 +408,7 @@ private:
 	int 				distanceTable[TOF660_IMAGE_WIDTH*TOF660_IMAGE_HEIGHT];
 	uint8_t 			procBuff[2][TOF660_BUFF_SIZE];
 	uint8_t 			response[2][TOF660_BUFF_SIZE];
-	uint8_t				rxArray[TOF660_BUFF_SIZE];
+
 	std::vector<cv::Vec3b> colorVector;
 
 	double	sin_angle;
