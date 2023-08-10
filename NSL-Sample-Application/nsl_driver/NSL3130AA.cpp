@@ -135,8 +135,6 @@ using namespace cv;
 #define MAX_DISTANCEVALUE 12500
 
 static const double PI = 3.14159265358979323846264338328;
-
-
 static int maxDistanceValue = 12500;
 static int maxAmplitudeValue = 2897;
 static int maxValidValue = 15000;
@@ -906,8 +904,8 @@ int NSL3130AA::reqStreamingFrame(SOCKET control_sock)
 
 void NSL3130AA::reqSingleFrame(SOCKET control_sock, int modeType)
 {
-	uint8_t data[3] = {0x00, 0x02, VALUE_AUTO_REPEAT_MEASUREMENT};
-//	uint8_t data[3] = {0x00, 0x02, VALUE_SINGLE_MEASUREMENT};
+	uint8_t data[3] = {0x00, 0x02, VALUE_AUTO_REPEAT_MEASUREMENT};		// USB 20 fps
+//	uint8_t data[3] = {0x00, 0x02, VALUE_SINGLE_MEASUREMENT};			// USB 10 fps
 	uint32_t data_len = 3;	
 	int cmdType = getCommandByType(modeType);	
 
@@ -1360,6 +1358,31 @@ void NSL3130AA::rxSocket(uint8_t *socketbuff, int buffLen)
 	
 }
 
+int NSL3130AA::flushRx(void)
+{
+	uint8_t buf[5000];
+	int n = 0;
+	int readflushData = 0;
+
+	while(true)
+	{
+		n = read(tofcamInfo.control_sock, buf, 5000);
+
+		if(n > 0){
+			readflushData += n;
+		}else if( n == -1 ){
+			printf("flush Error on  SerialConnection::readRxData= -1\n");
+			break;
+		}else if( n == 0 ){
+			printf("flush readData %d bytes\n", readflushData);
+			break;
+		}
+
+	}
+
+	return 0;
+}
+
 
 int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue) 
 {
@@ -1395,8 +1418,16 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
 	if( !exit_thtread && addQue == true )
 	{
 		unsigned int type = socketbuff[4];
+		uint32_t startMarker = socketbuff[0]<<24 | socketbuff[1]<<16 | socketbuff[2]<<8 | socketbuff[3];
 
-		if( type == 1 ){
+		if( memcmp(socketbuff, START_MARKER, 4) != 0 )
+		{
+			tofcamInfo.receivedBytes = 0;
+			printf("error start marker\n");
+			return 0;
+		}
+
+		if( type == 1 ){			
 			pthread_mutex_lock(&tofcamBuff.lock);
 			
 			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
@@ -1822,7 +1853,11 @@ bool NSL3130AA::Capture( void** output, int timeout )
 			}
 
 			reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
-			rxSerial(procBuff[1], expectedRcvLen, true);
+			if( rxSerial(procBuff[1], expectedRcvLen, true) < 0 ){
+				closesocket(tofcamInfo.control_sock);
+				tofcamInfo.control_sock = setSerialBaudrate();
+				continue;
+			}
 		}
 
 		if( GET_BUFF_CNT(tofcamBuff, TOFCAM_ETH_BUFF_SIZE) > 0 ){
@@ -2016,10 +2051,9 @@ int NSL3130AA::setSerialBaudrate(void)
 	int fileID;
 
 	char path[100];
-	sprintf(path,"/dev/ttyLidar");
+	sprintf(path, "%s", mIpaddr.c_str());
 	fileID = open(path, O_RDWR | O_NOCTTY | O_SYNC);
 	if( fileID < 0 ) return 0;
-	
 	tcflush(fileID, TCIOFLUSH);
 
 	struct termios tty;
@@ -2060,6 +2094,8 @@ int NSL3130AA::setSerialBaudrate(void)
 	}
 
 	printf("opened USB-Serial : %d\n", fileID);
+	tofcamInfo.control_sock = fileID;
+	flushRx();
 
 	return fileID;
 }
@@ -2135,9 +2171,9 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 		printf("not support windows USB inteface\n");
 	}
 #else
-	if( mIpaddr.compare("/dev/ttyLidar") == 0 ) {
+	if( !( mIpaddr.at(0) >= 0x30 && mIpaddr.at(0) <= 0x39 ) ){
 		ttySerial = true;
-		tofcamInfo.control_sock = setSerialBaudrate();
+		setSerialBaudrate();
 	}
 #endif
 

@@ -364,6 +364,7 @@ private:
 	void *rxTofcam660(void *arg);
 	void rxSocket(uint8_t *socketbuff, int buffLen);
 	int rxSerial(uint8_t *socketbuff, int buffLen, bool addQue);
+	int flushRx(void);
 	void keyProc();
 
 #ifdef _WINDOWS
