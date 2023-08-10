@@ -19,6 +19,15 @@
 - Visual studio 2019에서 테스트 되었습니다.
 - PCL-1.8.1-AllInOne-msvc2017-win64.exe 및 opencv 를 먼저 설치 후 사용 하십시오.
 
+## USB 인식용 rules 정의
+```
+$ sudo vi /etc/udev/rules.d/defined_lidar.rules
+KERNEL=="ttyACM*", ATTRS{idVendor}=="1fc9", ATTRS{idProduct}=="0094", MODE:="0777",SYMLINK+="ttyLidar"
+
+$ service udev reload
+$ service udev restart
+```
+
 ## LINUX 컴파일 방법
 ```
 $ cd NSL-Sample-Application/NSL-Sample-Application/
@@ -26,5 +35,5 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make
-$ ./nsl-dev or ./nsl-dev -captureType 1 ipaddr 192.168.0.220 or ./nsl-dev -help
+$ ./nsl-dev or ./nsl-dev -captureType 1 ipaddr 192.168.0.220 or ./nsl-dev ipaddr /dev/ttyLidar or ./nsl-dev -help
 ```
