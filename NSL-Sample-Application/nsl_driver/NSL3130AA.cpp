@@ -2133,7 +2133,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	printf("ipaddr = %s\n", mIpaddr.c_str());
 
 #ifndef _WINDOWS
-	if( mIpaddr.compare("/dev/ttyLiDAR") == 0 ) {
+	if( mIpaddr.compare("/dev/ttyLidar") == 0 ) {
 		ttySerial = true;
 		tofcamInfo.control_sock = setSerialBaudrate();
 	}
