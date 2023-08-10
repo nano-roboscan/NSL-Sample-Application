@@ -2132,7 +2132,11 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 
 	printf("ipaddr = %s\n", mIpaddr.c_str());
 
-#ifndef _WINDOWS
+#ifdef _WINDOWS
+	if( ttySerial ){
+		printf("not support windows USB inteface\n");
+	}
+#else
 	if( mIpaddr.compare("/dev/ttyLidar") == 0 ) {
 		ttySerial = true;
 		tofcamInfo.control_sock = setSerialBaudrate();
@@ -2143,6 +2147,8 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 		if( ttySerial ){
 			ttySerial = false;
 			printf("error ::: USB not opened\n");
+			printf("changed ipaddr /dev/ttyLidar -> 192.168.0.220\n");
+			mIpaddr = "192.168.0.220";
 		}
 
 		tofcamInfo.control_sock = InitializeControlsocket();
