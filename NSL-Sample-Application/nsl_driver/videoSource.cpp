@@ -552,7 +552,7 @@ void videoSource::setLidarOption(int netType, void *pCapOpt)
 
 int videoSource::prockey(CaptureOptions *appCfg)
 {
-	int key = cv::waitKey(10);
+	int key = cv::waitKey(1);
 
 //	printf("prockey key = %d\n", key);
 	switch(key)

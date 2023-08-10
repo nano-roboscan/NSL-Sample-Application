@@ -334,7 +334,6 @@ private:
 	int getCamInfo( uint8_t *data );
 	uint16_t getHeaderUint16(uint8_t *pData, const int offset);
 	uint32_t getHeaderUint32(uint8_t *pData, const int offset);
-	int processSerialData(uint8_t *tempBuffer, int recvedLen, int resp_idx);
 	int processUpdData(uint8_t *tempBuffer, int recvedLen, int resp_idx);
 	int recvFromTcp(SOCKET sock, uint8_t *total_buf);
 	void setGrayScaledColor(cv::Mat &imageLidar, int x, int y, int value, double end_range );
@@ -342,7 +341,7 @@ private:
 	void setAmplitudeColor(cv::Mat &imageLidar, int x, int y, int value );
 	int getDistanceAmplitude(cv::Mat &imageDistance, cv::Mat &imageAmplitude, bool bUsedPointCloud);
 	int getGrayscaled(cv::Mat &imageLidar, bool bUsedPointCloud);
-	int sendToDev(SOCKET sock, uint8_t *pData, int nLen);
+	int sendToDev(SOCKET sock, uint8_t *pData, int nLen, int expectedLen = 0);
 	void reqOverflow(SOCKET control_sock);
 	void reqHdrMode(SOCKET control_sock);
 	void reqCompensation(SOCKET control_sock);
@@ -409,6 +408,7 @@ private:
 	int 				distanceTable[TOF660_IMAGE_WIDTH*TOF660_IMAGE_HEIGHT];
 	uint8_t 			procBuff[2][TOF660_BUFF_SIZE];
 	uint8_t 			response[2][TOF660_BUFF_SIZE];
+	uint8_t				rxArray[TOF660_BUFF_SIZE];
 	std::vector<cv::Vec3b> colorVector;
 
 	double	sin_angle;
