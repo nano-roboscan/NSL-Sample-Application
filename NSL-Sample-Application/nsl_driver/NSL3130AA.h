@@ -366,6 +366,7 @@ private:
 	int rxSerial(uint8_t *socketbuff, int buffLen, bool addQue);
 	int flushRx(void);
 	void keyProc();
+	int testMode(uint8_t *socketbuff, int buffLen);
 
 #ifdef _WINDOWS
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcbVis();

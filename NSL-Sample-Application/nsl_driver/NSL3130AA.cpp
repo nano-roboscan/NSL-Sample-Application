@@ -946,7 +946,7 @@ void NSL3130AA::reqIntegrationTime(SOCKET control_sock)
 	data[9] = tofcamInfo.config.integrationTimeGrayScale & 0xFF;
 
 	int bComplete = sendToDev(control_sock, data, data_len, 14);
-	printf("setIntegrationTime3D : %d\n", tofcamInfo.config.integrationTime3D);
+	printf("setIntegrationTime3D : %d rx = %d\n", tofcamInfo.config.integrationTime3D, bComplete);
 
 }
 
@@ -1383,6 +1383,82 @@ int NSL3130AA::flushRx(void)
 	return 0;
 }
 
+int NSL3130AA::testMode(uint8_t *socketbuff, int buffLen) 
+{
+	printf("start testMode\n");
+	
+	tcflush(tofcamInfo.control_sock, TCIOFLUSH);
+
+	struct termios tty;
+	memset (&tty, 0, sizeof tty);
+
+	tcgetattr (tofcamInfo.control_sock, &tty); //TODO...
+
+	cfsetospeed (&tty, B4000000);
+	cfsetispeed (&tty, B4000000);
+
+	// no canonical processing
+	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
+
+	tty.c_oflag = 0;				// no remapping, no delays
+	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
+
+	tty.c_lflag = 0;				// no signaling chars, no echo,
+	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
+
+	tty.c_iflag &= ~IGNBRK; 		// disable break processing
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
+
+	tty.c_cc[VMIN]	= 0;			// non-blocking read
+	tty.c_cc[VTIME] = 5;			// 0.5 second read timeout
+
+	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
+	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
+	tty.c_cflag &= ~CSTOPB;    //one stop bit
+	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
+	tty.c_cflag |= CRTSCTS;   //data DTR hardware control do not use it
+
+	tcflush(tofcamInfo.control_sock, TCIOFLUSH);
+
+	if (tcsetattr (tofcamInfo.control_sock, TCSANOW, &tty) != 0){
+		printf("error %d from tcsetattr\n", errno);
+		return 0;
+	}
+
+	Sleep(100);
+
+	reqIntegrationTime(tofcamInfo.control_sock);
+	reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
+
+    uint8_t buf[4096];
+	int n = 0;
+
+//	const auto& time_cap0 = std::chrono::steady_clock::now();
+
+	for(int i=0; i< buffLen; i+=n)
+	{
+		unsigned long int buf_size = buffLen;
+		if(buf_size > sizeof(buf))
+			buf_size = sizeof(buf);
+
+		n = read(tofcamInfo.control_sock, buf, buf_size);
+
+		if(n > 0){						  
+			printf("read n = %d\n", n);
+		}else if(n == -1){
+			printf("test Error on  SerialConnection::readRxData= -1\n");
+			return -1;
+		}else if(n == 0 && i < buffLen-1){
+			printf("test readRxData %d bytes from %d received\n", i, buffLen);
+			return -2;
+		}
+
+	}
+
+	return 0;
+}
+
 
 int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue) 
 {
@@ -1418,7 +1494,6 @@ int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue)
 	if( !exit_thtread && addQue == true )
 	{
 		unsigned int type = socketbuff[4];
-		uint32_t startMarker = socketbuff[0]<<24 | socketbuff[1]<<16 | socketbuff[2]<<8 | socketbuff[3];
 
 		if( memcmp(socketbuff, START_MARKER, 4) != 0 )
 		{
@@ -1855,8 +1930,8 @@ bool NSL3130AA::Capture( void** output, int timeout )
 			reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
 			if( rxSerial(procBuff[1], expectedRcvLen, true) < 0 ){
 				closesocket(tofcamInfo.control_sock);
-				tofcamInfo.control_sock = setSerialBaudrate();
-				continue;
+				tofcamInfo.control_sock = 0;
+				setSerialBaudrate();
 			}
 		}
 
