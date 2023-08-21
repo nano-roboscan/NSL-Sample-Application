@@ -448,15 +448,15 @@ int NSL3130AA::setDistanceColor(cv::Mat &imageLidar, int x, int y, int value )
 	}
 	else if (value == TOF660_SATURATION)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 255;
+		imageLidar.at<Vec3b>(y, x)[0] = 128;
 		imageLidar.at<Vec3b>(y, x)[1] = 0;
-		imageLidar.at<Vec3b>(y, x)[2] = 128; 
+		imageLidar.at<Vec3b>(y, x)[2] = 255; 
 	}
 	else if (value == TOF660_ADC_OVERFLOW)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 169;
+		imageLidar.at<Vec3b>(y, x)[0] = 255;
 		imageLidar.at<Vec3b>(y, x)[1] = 14;
-		imageLidar.at<Vec3b>(y, x)[2] = 255; 
+		imageLidar.at<Vec3b>(y, x)[2] = 169; 
 	}
 	else if(value == TOF660_INTERFERENCE)
 	{
@@ -521,15 +521,15 @@ void NSL3130AA::setAmplitudeColor(cv::Mat &imageLidar, int x, int y, int value )
 	}
 	else if (value == TOF660_SATURATION)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 255;
+		imageLidar.at<Vec3b>(y, x)[0] = 128;
 		imageLidar.at<Vec3b>(y, x)[1] = 0;
-		imageLidar.at<Vec3b>(y, x)[2] = 128; 
+		imageLidar.at<Vec3b>(y, x)[2] = 255; 
 	}
 	else if (value == TOF660_ADC_OVERFLOW)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 169;
+		imageLidar.at<Vec3b>(y, x)[0] = 255;
 		imageLidar.at<Vec3b>(y, x)[1] = 14;
-		imageLidar.at<Vec3b>(y, x)[2] = 255; 
+		imageLidar.at<Vec3b>(y, x)[2] = 169; 
 	}
 	else if(value == TOF660_INTERFERENCE)
 	{
@@ -1268,7 +1268,8 @@ void NSL3130AA::initializeTofcam660(SOCKET socket)
 	for(int i=0;  i< numSteps; i++)
 	{
 	  createColorMapPixel(numSteps, i, red, green, blue);
-	  colorVector.push_back(Vec3b(red, green, blue));
+//\	  colorVector.push_back(Vec3b(red, green, blue));
+	  colorVector.push_back(Vec3b(blue, green, red));
 	}
 
 #if 1
@@ -1363,6 +1364,8 @@ int NSL3130AA::flushRx(void)
 	uint8_t buf[5000];
 	int n = 0;
 	int readflushData = 0;
+
+	reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
 
 	while(true)
 	{
@@ -2143,11 +2146,12 @@ int NSL3130AA::setSerialBaudrate(void)
 	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
 
 	tty.c_oflag = 0;				// no remapping, no delays
-	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
+//	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
 
 	tty.c_lflag = 0;				// no signaling chars, no echo,
-	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
+//	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
 
+//	tty.c_iflag = (IGNBRK|IGNPAR);
 	tty.c_iflag &= ~IGNBRK; 		// disable break processing
 	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
 	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
@@ -2158,8 +2162,8 @@ int NSL3130AA::setSerialBaudrate(void)
 	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
 	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
 	tty.c_cflag &= ~CSTOPB;    //one stop bit
+	tty.c_cflag &= ~CRTSCTS;
 	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
-	tty.c_cflag |= CRTSCTS;   //data DTR hardware control do not use it
 
 	tcflush(fileID, TCIOFLUSH);
 

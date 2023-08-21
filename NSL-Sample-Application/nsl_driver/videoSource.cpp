@@ -543,7 +543,7 @@ void videoSource::setLidarOption(int netType, void *pCapOpt)
 	beginTime = std::clock();
 
 	cv::namedWindow(WIN_NAME, cv::WINDOW_NORMAL);
-//	cv::setWindowProperty(WIN_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);	
+	cv::setWindowProperty(WIN_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);	
 	cv::setMouseCallback(WIN_NAME, callback_mouse_click, this);
 
 	startCaptureCommand(netType, pCapOpt);
