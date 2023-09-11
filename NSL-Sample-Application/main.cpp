@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 	videoSource* lidarSrc = videoSource::initAppCfg(argc, argv, &camOpt);
 
 #ifdef SUPPORT_DEEPLEARNING
-	lidarSrc->initDeepLearning();
+	lidarSrc->initDeepLearning(&camOpt);
 #endif
 
 	lidarSrc->setLidarOption(SSD_TYPE, &camOpt);
@@ -128,7 +128,57 @@ int main(int argc, char** argv)
 #define SERIAL_END_MARK					0xFFFF55AA										   ///<End marker if no CRC is used
 #define SERIAL_BUFFER_SIZE 				1024
 
-static uint8_t socketbuff[308000];
+int setSerialBaudrate(void)
+{
+	int fileID;
+
+	char path[100];
+	sprintf(path, "%s", "/dev/ttyLidar");
+	fileID = open(path, O_RDWR | O_NOCTTY | O_SYNC);
+	if( fileID < 0 ) return 0;
+	tcflush(fileID, TCIOFLUSH);
+
+	struct termios tty;
+	memset (&tty, 0, sizeof tty);
+
+	tcgetattr (fileID, &tty); //TODO...
+
+	cfsetospeed (&tty, B4000000);
+	cfsetispeed (&tty, B4000000);
+
+	// no canonical processing
+	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
+
+	tty.c_oflag = 0;				// no remapping, no delays
+	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
+
+	tty.c_lflag = 0;				// no signaling chars, no echo,
+	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
+
+	tty.c_iflag &= ~IGNBRK; 		// disable break processing
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
+
+	tty.c_cc[VMIN]	= 0;			// non-blocking read
+	tty.c_cc[VTIME] = 5;			// 0.5 second read timeout
+
+	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
+	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
+	tty.c_cflag &= ~CSTOPB;    //one stop bit
+	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
+	tty.c_cflag |= CRTSCTS;   //data DTR hardware control do not use it
+
+	tcflush(fileID, TCIOFLUSH);
+
+	if (tcsetattr (fileID, TCSANOW, &tty) != 0){
+		printf("error %d from tcsetattr\n", errno);
+		return 0;
+	}
+
+	printf("opened USB-Serial : %d\n", fileID);
+
+	return fileID;
+}
 
 
 void reqSingleFrame(int fd)
@@ -166,77 +216,43 @@ void reqSingleFrame(int fd)
 }
 
 
-
-int setSerialBaudrate(void)
+int rxSerial(int fd) 
 {
-	int fileID;
+	static uint8_t socketbuff[308000];
+    uint8_t buf[4096];
+	int n = 0;
+	int buffLen = 307238;	// 4 * 320 * 240 + 13 + 25;
 
-	char path[100];
-	sprintf(path, "%s", "/dev/ttyLidar");
-	fileID = open(path, O_RDWR | O_NOCTTY | O_SYNC);
-	if( fileID < 0 ){
-		printf("tty error ~~~~~~~~~~\n");
-		return 0;
-	}
-	tcflush(fileID, TCIOFLUSH);
+//	const auto& time_cap0 = std::chrono::steady_clock::now();
+	reqSingleFrame(fd);
 
-	struct termios tty;
-	memset (&tty, 0, sizeof(tty));
+	for(int i=0; i< buffLen; i+=n)
+	{
+		unsigned long int buf_size = buffLen;
+		if(buf_size > sizeof(buf))
+			buf_size = sizeof(buf);
 
-	tcgetattr (fileID, &tty); //TODO...
+		n = read(fd, buf, buf_size);
 
-	cfsetospeed (&tty, B4000000);
-	cfsetispeed (&tty, B4000000);
+		if(n > 0){						  
+			memcpy(socketbuff + i, buf, n);
+		}else if(n == -1){
+			printf("Error on  SerialConnection::readRxData= -1\n");
+			return -1;
+		}else if(n == 0 && i < buffLen-1){
+			printf("serialConnection->readRxData %d bytes from %d received\n", i, buffLen);
+			return -2;
+		}
 
-#if 0
-	tty.c_oflag = 0;				// no remapping, no delays
-	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
-
-	tty.c_lflag = 0;				// no signaling chars, no echo,
-	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
-
-	tty.c_iflag &= ~IGNBRK; 		// disable break processing
-	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
-	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
-
-	tty.c_cc[VMIN]	= 0;			// non-blocking read
-	tty.c_cc[VTIME] = 5;			// 0.5 second read timeout
-
-	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
-	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
-	tty.c_cflag &= ~CSTOPB;    //one stop bit
-	tty.c_cflag &= ~CRTSCTS;
-	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
-#else
-    tty.c_oflag = 0;                // no remapping, no delays
-    tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
-
-    tty.c_lflag = 0;                // no signaling chars, no echo,
-    tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
-
-	tty.c_iflag = (IGNPAR|IGNBRK);
-//    tty.c_iflag &= ~IGNBRK;         // disable break processing
-//    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
-//    tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
-
-    tty.c_cc[VMIN]  = 0;            // non-blocking read
-    tty.c_cc[VTIME] = 5;            // 0.5 second read timeout
-
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;     // 8-bit chars                
-    tty.c_cflag &= ~(PARENB | PARODD);  // shut off parity
-    tty.c_cflag &= ~CSTOPB;    //one stop bit
-	tty.c_cflag |= CRTSCTS;
-    tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
-#endif
-
-	tcflush(fileID, TCIOFLUSH);
-
-	if (tcsetattr (fileID, TCSANOW, &tty) != 0){
-		printf("error %d from tcsetattr\n", errno);
-		return 0;
 	}
 
-	return fileID;
+	printf("rx data len = %d\n", buffLen);
+//	const auto& time_cap1 = std::chrono::steady_clock::now();
+//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
+//	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
+
+
+	return buffLen;
 }
 
 
@@ -246,7 +262,6 @@ int flushRx(int fd)
 	int n = 0;
 	int readflushData = 0;
 
-	if( fd <= 0 ) return 0;
 	reqSingleFrame(fd);
 
 	while(true)
@@ -269,48 +284,6 @@ int flushRx(int fd)
 }
 
 
-int rxSerial(int fd) 
-{
-    uint8_t buf[4096];
-	int n = 0;
-	int buffLen = 307238;	// 4 * 320 * 240 + 13 + 25;
-
-	if( fd <= 0 ) return 0;
-
-//	const auto& time_cap0 = std::chrono::steady_clock::now();
-	reqSingleFrame(fd);
-//	printf("write complete\n");
-	
-	for(int i=0; i< buffLen; i+=n)
-	{
-		unsigned long int buf_size = buffLen;
-		if(buf_size > sizeof(buf))
-			buf_size = sizeof(buf);
-
-		n = read(fd, buf, buf_size);
-
-		if(n > 0){						  
-			memcpy(socketbuff + i, buf, n);
-		}else if(n == -1){
-			printf("Error on  SerialConnection::readRxData= -1\n");
-			return -1;
-		}else if(n == 0 && i < buffLen-1){
-			printf("serialConnection->readRxData %d bytes from %d received\n", i, buffLen);
-			return -2;
-		}
-
-	}
-
-//	printf("rx data len = %d\n", buffLen);
-//	const auto& time_cap1 = std::chrono::steady_clock::now();
-//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
-//	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
-
-
-	return buffLen;
-}
-
-
 /*
 	single frame tx/rx test
 */
@@ -320,14 +293,10 @@ int main(int argc, char** argv)
 		printf("can't catch SIGINT\n");
 
 	int fd = setSerialBaudrate();
-	flushRx(fd);
 	while(signal_recieved == 0){
 		if( rxSerial(fd) < 0 ){
-			closesocket(fd);
-			fd = setSerialBaudrate();
 			flushRx(fd);
 		}
-		usleep(0);
 	}
 
 	close(fd);

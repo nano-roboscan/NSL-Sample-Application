@@ -76,7 +76,7 @@ public:
 	int prockey(CaptureOptions *appCfg);
 	void stopLidar();
 	void drawCaption(cv::Mat grayMat, cv::Mat distMat, CaptureOptions *appCfg);
-	void initDeepLearning( void );
+	void initDeepLearning( CaptureOptions *pAppCfg );
 	void deepLearning( cv::Mat imageLidar );
 
 	///////////////////// virtual interface ////////////////////////////////////////////////////////////////

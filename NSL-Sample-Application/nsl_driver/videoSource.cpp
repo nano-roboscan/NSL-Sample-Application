@@ -284,7 +284,7 @@ void videoSource::getMouseEvent( int *mouse_xpos, int *mouse_ypos )
 }
 
 /////////////////////////////////////// public function ///////////////////////////////////////////////////////////
-void videoSource::initDeepLearning( void )
+void videoSource::initDeepLearning( CaptureOptions *pAppCfg )
 {
 #ifdef _WINDOWS
 	cv::String ssd_model = "..\\deepLearning\\frozen_inference_graph.pb";
@@ -309,7 +309,8 @@ void videoSource::initDeepLearning( void )
 	dnnNet.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 #endif
 
-	conf_threshold = 0.4f;
+	conf_threshold = pAppCfg->detectThreshold;
+	printf("THRESHOLD::conf_threshold = %.1f\n", conf_threshold);
 }
 
 
@@ -543,7 +544,7 @@ void videoSource::setLidarOption(int netType, void *pCapOpt)
 	beginTime = std::clock();
 
 	cv::namedWindow(WIN_NAME, cv::WINDOW_NORMAL);
-	cv::setWindowProperty(WIN_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);	
+//	cv::setWindowProperty(WIN_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);	
 	cv::setMouseCallback(WIN_NAME, callback_mouse_click, this);
 
 	startCaptureCommand(netType, pCapOpt);

@@ -63,6 +63,10 @@ typedef struct ImageFrame_{
 	void	*frameMat;
 	void	*distMat;
 	int	   *pDistanceTable;	
+
+	int 	localFileTest;
+	int 	localFileTotalCnt;
+	char 	localFileName[300];
 }ImageFrame;
 
 typedef struct CaptureOptions_{
