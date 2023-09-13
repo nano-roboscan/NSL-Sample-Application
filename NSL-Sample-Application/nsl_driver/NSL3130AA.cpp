@@ -52,6 +52,7 @@
 
 using namespace cv;
 
+
 //#define TOFCAM660_ROTATE_IMAGE_90
 //#define ROTATE_IMAGE_ADJUST_ROI
 
@@ -792,6 +793,7 @@ int NSL3130AA::sendToDev(SOCKET sock, uint8_t *pData, int nLen, int expectedLen)
 	static uint8_t serialData[SERIAL_BUFFER_SIZE];
 	int pktLen = 0;
 	
+#ifndef _WINDOWS
 	if( ttySerial ){
 		uint32_t pyalodLen = nLen;
 		
@@ -816,7 +818,9 @@ int NSL3130AA::sendToDev(SOCKET sock, uint8_t *pData, int nLen, int expectedLen)
 		_unused(ret);
 		if( expectedLen > 0 ) pktLen = rxSerial(serialData, expectedLen, false);
 	}
-	else{
+	else
+#endif
+	{
 		int nTotalLen = 0;
 		memcpy(&serialData[0], START_MARKER, 4); 
 		nTotalLen+=4;
@@ -1357,173 +1361,6 @@ void NSL3130AA::rxSocket(uint8_t *socketbuff, int buffLen)
 	
 }
 
-int NSL3130AA::flushRx(void)
-{
-	uint8_t buf[5000];
-	int n = 0;
-	int readflushData = 0;
-
-	while(true)
-	{
-		n = read(tofcamInfo.control_sock, buf, 5000);
-
-		if(n > 0){
-			readflushData += n;
-		}else if( n == -1 ){
-			printf("flush Error on  SerialConnection::readRxData= -1\n");
-			break;
-		}else if( n == 0 ){
-			printf("flush readData %d bytes\n", readflushData);
-			break;
-		}
-
-	}
-
-	return 0;
-}
-
-int NSL3130AA::testMode(uint8_t *socketbuff, int buffLen) 
-{
-	printf("start testMode\n");
-	
-	tcflush(tofcamInfo.control_sock, TCIOFLUSH);
-
-	struct termios tty;
-	memset (&tty, 0, sizeof tty);
-
-	tcgetattr (tofcamInfo.control_sock, &tty); //TODO...
-
-	cfsetospeed (&tty, B4000000);
-	cfsetispeed (&tty, B4000000);
-
-	// no canonical processing
-	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
-
-	tty.c_oflag = 0;				// no remapping, no delays
-	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
-
-	tty.c_lflag = 0;				// no signaling chars, no echo,
-	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
-
-	tty.c_iflag &= ~IGNBRK; 		// disable break processing
-	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
-	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
-
-	tty.c_cc[VMIN]	= 0;			// non-blocking read
-	tty.c_cc[VTIME] = 5;			// 0.5 second read timeout
-
-	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
-	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
-	tty.c_cflag &= ~CSTOPB;    //one stop bit
-	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
-	tty.c_cflag |= CRTSCTS;   //data DTR hardware control do not use it
-
-	tcflush(tofcamInfo.control_sock, TCIOFLUSH);
-
-	if (tcsetattr (tofcamInfo.control_sock, TCSANOW, &tty) != 0){
-		printf("error %d from tcsetattr\n", errno);
-		return 0;
-	}
-
-	Sleep(100);
-
-	reqIntegrationTime(tofcamInfo.control_sock);
-	reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
-
-    uint8_t buf[4096];
-	int n = 0;
-
-//	const auto& time_cap0 = std::chrono::steady_clock::now();
-
-	for(int i=0; i< buffLen; i+=n)
-	{
-		unsigned long int buf_size = buffLen;
-		if(buf_size > sizeof(buf))
-			buf_size = sizeof(buf);
-
-		n = read(tofcamInfo.control_sock, buf, buf_size);
-
-		if(n > 0){						  
-			printf("read n = %d\n", n);
-		}else if(n == -1){
-			printf("test Error on  SerialConnection::readRxData= -1\n");
-			return -1;
-		}else if(n == 0 && i < buffLen-1){
-			printf("test readRxData %d bytes from %d received\n", i, buffLen);
-			return -2;
-		}
-
-	}
-
-	return 0;
-}
-
-
-int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue) 
-{
-    uint8_t buf[4096];
-	int n = 0;
-
-//	const auto& time_cap0 = std::chrono::steady_clock::now();
-
-	for(int i=0; i< buffLen; i+=n)
-	{
-		unsigned long int buf_size = buffLen;
-		if(buf_size > sizeof(buf))
-			buf_size = sizeof(buf);
-
-		n = read(tofcamInfo.control_sock, buf, buf_size);
-
-		if(n > 0){						  
-			memcpy(socketbuff + i, buf, n);
-		}else if(n == -1){
-			printf("Error on  SerialConnection::readRxData= -1\n");
-			return -1;
-		}else if(n == 0 && i < buffLen-1){
-			printf("serialConnection->readRxData %d bytes from %d received\n", i, buffLen);
-			return -2;
-		}
-
-	}
-
-//	const auto& time_cap1 = std::chrono::steady_clock::now();
-//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
-//	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
-
-	if( !exit_thtread && addQue == true )
-	{
-		unsigned int type = socketbuff[4];
-
-		if( memcmp(socketbuff, START_MARKER, 4) != 0 )
-		{
-			tofcamInfo.receivedBytes = 0;
-			printf("error start marker\n");
-			return 0;
-		}
-
-		if( type == 1 ){			
-			pthread_mutex_lock(&tofcamBuff.lock);
-			
-			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
-			memcpy(tofcamBuff.tofcamBuf[tofcamBuff.head_idx], &socketbuff[9], buffLen-13);
-			tofcamBuff.bufLen[tofcamBuff.head_idx] = buffLen;
-			ADD_TOFCAM_BUFF(tofcamBuff, TOFCAM_ETH_BUFF_SIZE);
-			
-			pthread_mutex_unlock(&tofcamBuff.lock);
-		}
-		else{
-			printf("err recv data type = %d totalLen = %d recv = %d\n", type, buffLen, tofcamInfo.receivedBytes);
-		}
-
-		tofcamInfo.receivedBytes = 0;
-	}
-	else if( addQue == false ){
-		tofcamInfo.receivedBytes = 0;
-	}
-
-	return buffLen;
-}
-
 
 void NSL3130AA::keyProc()
 {
@@ -1698,7 +1535,32 @@ void *NSL3130AA::rxTofcam660(void *arg)
 
 		keyProc();
 
-		rxSocket(socketbuff, sizeof(socketbuff));
+#ifndef _WINDOWS
+		if( ttySerial ) {
+
+			int expectedRcvLen = 307238;
+			if( tofcamInfo.tofcamModeType == AMPLITEDE_DISTANCE_MODE
+				|| tofcamInfo.tofcamModeType == DISTANCE_GRAYSCALE_MODE
+				|| tofcamInfo.tofcamModeType == AMPLITEDE_DISTANCE_EX_MODE ){
+				expectedRcvLen = 4 * TOF660_IMAGE_WIDTH * TOF660_IMAGE_HEIGHT + 13 + 25;
+			}
+			else if( tofcamInfo.tofcamModeType == DISTANCE_MODE || tofcamInfo.tofcamModeType == GRAYSCALE_MODE ){
+				expectedRcvLen = 2 * TOF660_IMAGE_WIDTH * TOF660_IMAGE_HEIGHT + 13 + 25;
+			}
+
+			reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
+			if( rxSerial(socketbuff, expectedRcvLen, true) < 0 ){
+				closesocket(tofcamInfo.control_sock);
+				tofcamInfo.control_sock = 0;
+				setSerialBaudrate();
+			}
+		}
+		else
+#endif
+		{
+			rxSocket(socketbuff, sizeof(socketbuff));
+		}
+
 		
 		Sleep(1);
 	}
@@ -1900,7 +1762,6 @@ std::string NSL3130AA::getLeftViewName(void)
 }
 
 
-
 // Capture
 bool NSL3130AA::Capture( void** output, int timeout )
 {
@@ -1913,30 +1774,7 @@ bool NSL3130AA::Capture( void** output, int timeout )
 	int frame_cnt = 0;
 	while(!exit_thtread)
 	{
-		if( ttySerial ) {
-
-			keyProc();
-
-			int expectedRcvLen = 307238;
-			if( tofcamInfo.tofcamModeType == AMPLITEDE_DISTANCE_MODE
-				|| tofcamInfo.tofcamModeType == DISTANCE_GRAYSCALE_MODE
-				|| tofcamInfo.tofcamModeType == AMPLITEDE_DISTANCE_EX_MODE ){
-				expectedRcvLen = 4 * TOF660_IMAGE_WIDTH * TOF660_IMAGE_HEIGHT + 13 + 25;
-			}
-			else if( tofcamInfo.tofcamModeType == DISTANCE_MODE || tofcamInfo.tofcamModeType == GRAYSCALE_MODE ){
-				expectedRcvLen = 2 * TOF660_IMAGE_WIDTH * TOF660_IMAGE_HEIGHT + 13 + 25;
-			}
-
-			reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
-			if( rxSerial(procBuff[1], expectedRcvLen, true) < 0 ){
-				closesocket(tofcamInfo.control_sock);
-				tofcamInfo.control_sock = 0;
-				setSerialBaudrate();
-			}
-		}
-
-		if( GET_BUFF_CNT(tofcamBuff, TOFCAM_ETH_BUFF_SIZE) > 0 )
-		{
+		if( GET_BUFF_CNT(tofcamBuff, TOFCAM_ETH_BUFF_SIZE) > 0 ){
 
 			cv::Mat image(TOF660_IMAGE_HEIGHT, TOF660_IMAGE_WIDTH, CV_8UC3, Scalar(255,255,255));	
 			cv::Mat imageDist(TOF660_IMAGE_HEIGHT, TOF660_IMAGE_WIDTH, CV_8UC3, Scalar(255,255,255));			
@@ -2053,17 +1891,15 @@ void NSL3130AA::closeLidar()
 	if( exit_thtread == 0 ){
 	    exit_thtread = 1;
 
-		if( ttySerial == false ){
 #ifdef _WINDOWS
-			DWORD rst = WaitForSingleObject(hThread, 1000);
-			if (rst != WAIT_OBJECT_0) {
-				printf("wait error\n");
-			}
+		DWORD rst = WaitForSingleObject(hThread, 1000);
+		if (rst != WAIT_OBJECT_0) {
+			printf("wait error\n");
+		}
 
 #else
-			pthread_join(threadID, NULL);
+		pthread_join(threadID, NULL);
 #endif
-		}
 		
 		reqStopStream(tofcamInfo.control_sock);
 
@@ -2097,7 +1933,7 @@ void NSL3130AA::startCaptureCommand(int netType, void *pCapOption )
 	tofcamInfo.config.temporalFilterThreshold = pCapOpt->temporalFilterThreshold;
 	tofcamInfo.config.interferenceUseLashValueEnable = pCapOpt->interferenceUseLashValueEnable;
 	tofcamInfo.config.interferenceLimit = pCapOpt->interferenceLimit;
-
+	
 	reqIntegrationTime(tofcamInfo.control_sock);
 	reqMinAmplitude(tofcamInfo.control_sock);
 	reqFilterParameter(tofcamInfo.control_sock);
@@ -2111,7 +1947,6 @@ void NSL3130AA::startCaptureCommand(int netType, void *pCapOption )
 #ifdef __STREAMING_COMMAND__
 	if( ttySerial == false ) reqStreamingFrame(tofcamInfo.control_sock);
 #endif	
-
 	tofcamInfo.captureNetType = netType;
 
 	printf("start Capture~~~ intTime = %d/%d modeType =%d\n", pCapOpt->integrationTime, pCapOpt->grayIntegrationTime, pCapOpt->captureType);
@@ -2123,6 +1958,7 @@ void NSL3130AA::setKey(int cmdKey)
 	tofcamInfo.tofcamEvent_key = cmdKey;
 }
 
+#ifndef _WINDOWS
 int NSL3130AA::setSerialBaudrate(void)
 {
 	int fileID;
@@ -2145,11 +1981,12 @@ int NSL3130AA::setSerialBaudrate(void)
 	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
 
 	tty.c_oflag = 0;				// no remapping, no delays
-	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
+//	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
 
 	tty.c_lflag = 0;				// no signaling chars, no echo,
-	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
+//	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
 
+//	tty.c_iflag = (IGNBRK|IGNPAR);
 	tty.c_iflag &= ~IGNBRK; 		// disable break processing
 	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
 	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
@@ -2160,8 +1997,8 @@ int NSL3130AA::setSerialBaudrate(void)
 	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
 	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
 	tty.c_cflag &= ~CSTOPB;    //one stop bit
+	tty.c_cflag &= ~CRTSCTS;
 	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
-	tty.c_cflag |= CRTSCTS;   //data DTR hardware control do not use it
 
 	tcflush(fileID, TCIOFLUSH);
 
@@ -2177,6 +2014,101 @@ int NSL3130AA::setSerialBaudrate(void)
 	return fileID;
 }
 
+
+int NSL3130AA::flushRx(void)
+{
+	uint8_t buf[5000];
+	int n = 0;
+	int readflushData = 0;
+
+	reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
+
+	while(true)
+	{
+		n = read(tofcamInfo.control_sock, buf, 5000);
+
+		if(n > 0){
+			readflushData += n;
+		}else if( n == -1 ){
+			printf("flush Error on  SerialConnection::readRxData= -1\n");
+			break;
+		}else if( n == 0 ){
+			printf("flush readData %d bytes\n", readflushData);
+			break;
+		}
+
+	}
+
+	return 0;
+}
+
+
+
+
+int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue) 
+{
+    uint8_t buf[4096];
+	int n = 0;
+
+//	const auto& time_cap0 = std::chrono::steady_clock::now();
+
+	for(int i=0; i< buffLen; i+=n)
+	{
+		unsigned long int buf_size = buffLen;
+		if(buf_size > sizeof(buf))
+			buf_size = sizeof(buf);
+
+		n = read(tofcamInfo.control_sock, buf, buf_size);
+
+		if(n > 0){						  
+			memcpy(socketbuff + i, buf, n);
+		}else if(n == -1){
+			printf("Error on  SerialConnection::readRxData= -1\n");
+			return -1;
+		}else if(n == 0 && i < buffLen-1){
+			printf("serialConnection->readRxData %d bytes from %d received\n", i, buffLen);
+			return -2;
+		}
+
+	}
+
+//	const auto& time_cap1 = std::chrono::steady_clock::now();
+//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
+//	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
+
+	if( !exit_thtread && addQue == true )
+	{
+		unsigned int type = socketbuff[4];
+
+		if( memcmp(socketbuff, START_MARKER, 4) != 0 )
+		{
+			printf("error start marker [%02X:%02X:%02X:%02X]\n", socketbuff[0], socketbuff[1], socketbuff[2], socketbuff[3]);
+		}
+		else if( type == 1 ){
+			pthread_mutex_lock(&tofcamBuff.lock);
+			
+			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
+			memcpy(tofcamBuff.tofcamBuf[tofcamBuff.head_idx], &socketbuff[9], buffLen-13);
+			tofcamBuff.bufLen[tofcamBuff.head_idx] = buffLen;
+			ADD_TOFCAM_BUFF(tofcamBuff, TOFCAM_ETH_BUFF_SIZE);
+			
+			pthread_mutex_unlock(&tofcamBuff.lock);
+		}
+		else{
+			printf("err recv data type = %d totalLen = %d recv = %d\n", type, buffLen, tofcamInfo.receivedBytes);
+		}
+
+		tofcamInfo.receivedBytes = 0;
+	}
+	else if( addQue == false ){
+		tofcamInfo.receivedBytes = 0;
+	}
+
+	return buffLen;
+}
+
+
+#endif
 
 
 // constructor
@@ -2243,11 +2175,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 
 	printf("ipaddr = %s\n", mIpaddr.c_str());
 
-#ifdef _WINDOWS
-	if( ttySerial ){
-		printf("not support windows USB inteface\n");
-	}
-#else
+#ifndef _WINDOWS
 	if( !( mIpaddr.at(0) >= 0x30 && mIpaddr.at(0) <= 0x39 ) ){
 		ttySerial = true;
 		setSerialBaudrate();
@@ -2270,11 +2198,8 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	initializeTofcam660(tofcamInfo.control_sock);
 
 #ifdef _WINDOWS
-
-	if( ttySerial == false ){
-		unsigned threadID;
-		hThread = (HANDLE)_beginthreadex(NULL, 0, &NSL3130AA::rxWrapper, this, 0, &threadID);
-	}
+	unsigned threadID;
+	hThread = (HANDLE)_beginthreadex(NULL, 0, &NSL3130AA::rxWrapper, this, 0, &threadID);
 
 	double psdAngle = 0.0f; //seobi psd angle 0'
 	sin_angle = sin(psdAngle*PI/180.0);
@@ -2286,9 +2211,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	point_cloud_ptr = pcbVis();
 	viewer = rgbVis(point_cloud_ptr);
 #else
-	if( ttySerial == false ){
-		pthread_create(&threadID, NULL, NSL3130AA::rxWrapper, this);
-	}
+	pthread_create(&threadID, NULL, NSL3130AA::rxWrapper, this);
 #endif
 
 }

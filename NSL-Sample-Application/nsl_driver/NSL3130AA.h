@@ -354,7 +354,9 @@ private:
 	void reqMinAmplitude(SOCKET control_sock);
 	void reqSetROI(SOCKET control_sock);
 	void reqGrayscaleLedControl(SOCKET control_sock);
+#ifndef _WINDOWS
 	int setSerialBaudrate(void);
+#endif
 	SOCKET InitializeControlsocket(void);
 	SOCKET InitializeDataSocket(void);
 	double interpolate( double x, double x0, double y0, double x1, double y1);
@@ -366,7 +368,6 @@ private:
 	int rxSerial(uint8_t *socketbuff, int buffLen, bool addQue);
 	int flushRx(void);
 	void keyProc();
-	int testMode(uint8_t *socketbuff, int buffLen);
 
 #ifdef _WINDOWS
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcbVis();
