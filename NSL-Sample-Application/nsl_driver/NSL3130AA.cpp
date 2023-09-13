@@ -406,15 +406,15 @@ void NSL3130AA::setGrayScaledColor(cv::Mat &imageLidar, int x, int y, int value,
 {
 	if (value == TOF660_SATURATION)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 255;
+		imageLidar.at<Vec3b>(y, x)[0] = 128;
 		imageLidar.at<Vec3b>(y, x)[1] = 0;
-		imageLidar.at<Vec3b>(y, x)[2] = 128; 
+		imageLidar.at<Vec3b>(y, x)[2] = 255; 
 	}
 	else if (value == TOF660_ADC_OVERFLOW)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 169;
+		imageLidar.at<Vec3b>(y, x)[0] = 255;
 		imageLidar.at<Vec3b>(y, x)[1] = 14;
-		imageLidar.at<Vec3b>(y, x)[2] = 255; 
+		imageLidar.at<Vec3b>(y, x)[2] = 169; 
 	}
 	else if (value < 0)
 	{
@@ -521,15 +521,15 @@ void NSL3130AA::setAmplitudeColor(cv::Mat &imageLidar, int x, int y, int value )
 	}
 	else if (value == TOF660_SATURATION)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 255;
+		imageLidar.at<Vec3b>(y, x)[0] = 128;
 		imageLidar.at<Vec3b>(y, x)[1] = 0;
-		imageLidar.at<Vec3b>(y, x)[2] = 128; 
+		imageLidar.at<Vec3b>(y, x)[2] = 255; 
 	}
 	else if (value == TOF660_ADC_OVERFLOW)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 169;
+		imageLidar.at<Vec3b>(y, x)[0] = 255;
 		imageLidar.at<Vec3b>(y, x)[1] = 14;
-		imageLidar.at<Vec3b>(y, x)[2] = 255; 
+		imageLidar.at<Vec3b>(y, x)[2] = 169; 
 	}
 	else if(value == TOF660_INTERFERENCE)
 	{
@@ -907,7 +907,7 @@ int NSL3130AA::reqStreamingFrame(SOCKET control_sock)
 
 void NSL3130AA::reqSingleFrame(SOCKET control_sock, int modeType)
 {
-	uint8_t data[3] = {0x00, 0x02, VALUE_AUTO_REPEAT_MEASUREMENT};		// USB 20 fps
+	uint8_t data[3] = {0x00, 0x02, VALUE_AUTO_REPEAT_MEASUREMENT};		// USB 24 fps
 //	uint8_t data[3] = {0x00, 0x02, VALUE_SINGLE_MEASUREMENT};			// USB 10 fps
 	uint32_t data_len = 3;	
 	int cmdType = getCommandByType(modeType);	
