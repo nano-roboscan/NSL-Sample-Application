@@ -354,9 +354,7 @@ private:
 	void reqMinAmplitude(SOCKET control_sock);
 	void reqSetROI(SOCKET control_sock);
 	void reqGrayscaleLedControl(SOCKET control_sock);
-#ifndef _WINDOWS
-	int setSerialBaudrate(void);
-#endif
+
 	SOCKET InitializeControlsocket(void);
 	SOCKET InitializeDataSocket(void);
 	double interpolate( double x, double x0, double y0, double x1, double y1);
@@ -365,8 +363,6 @@ private:
 	void initializeTofcam660(SOCKET socket);
 	void *rxTofcam660(void *arg);
 	void rxSocket(uint8_t *socketbuff, int buffLen);
-	int rxSerial(uint8_t *socketbuff, int buffLen, bool addQue);
-	int flushRx(void);
 	void keyProc();
 
 #ifdef _WINDOWS
@@ -387,6 +383,9 @@ private:
 
 	LensTransform  lensTransform;
 #else
+	int rxSerial(uint8_t *socketbuff, int buffLen, bool addQue);
+	int flushRx(void);
+	int setSerialBaudrate(void);
 	static void* rxWrapper(void* thisPtr) {
 		((NSL3130AA*) thisPtr)->rxTofcam660(NULL);
 		return NULL;

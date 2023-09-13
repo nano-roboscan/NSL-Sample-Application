@@ -1643,6 +1643,157 @@ pcl::visualization::PCLVisualizer::Ptr NSL3130AA::rgbVis(pcl::PointCloud<pcl::Po
 #endif
 	return (viewer);
 }
+
+#else
+
+int NSL3130AA::setSerialBaudrate(void)
+{
+	int fileID;
+
+	char path[100];
+	sprintf(path, "%s", mIpaddr.c_str());
+	fileID = open(path, O_RDWR | O_NOCTTY | O_SYNC);
+	if( fileID < 0 ) return 0;
+	tcflush(fileID, TCIOFLUSH);
+
+	struct termios tty;
+	memset (&tty, 0, sizeof tty);
+
+	tcgetattr (fileID, &tty); //TODO...
+
+	cfsetospeed (&tty, B4000000);
+	cfsetispeed (&tty, B4000000);
+
+	// no canonical processing
+	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
+
+	tty.c_oflag = 0;				// no remapping, no delays
+//	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
+
+	tty.c_lflag = 0;				// no signaling chars, no echo,
+//	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
+
+//	tty.c_iflag = (IGNBRK|IGNPAR);
+	tty.c_iflag &= ~IGNBRK; 		// disable break processing
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
+
+	tty.c_cc[VMIN]	= 0;			// non-blocking read
+	tty.c_cc[VTIME] = 5;			// 0.5 second read timeout
+
+	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
+	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
+	tty.c_cflag &= ~CSTOPB;    //one stop bit
+	tty.c_cflag &= ~CRTSCTS;
+	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
+
+	tcflush(fileID, TCIOFLUSH);
+
+	if (tcsetattr (fileID, TCSANOW, &tty) != 0){
+		printf("error %d from tcsetattr\n", errno);
+		return 0;
+	}
+
+	printf("opened USB-Serial : %d\n", fileID);
+	tofcamInfo.control_sock = fileID;
+	flushRx();
+
+	return fileID;
+}
+
+
+int NSL3130AA::flushRx(void)
+{
+	uint8_t buf[5000];
+	int n = 0;
+	int readflushData = 0;
+
+	reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
+
+	while(true)
+	{
+		n = read(tofcamInfo.control_sock, buf, 5000);
+
+		if(n > 0){
+			readflushData += n;
+		}else if( n == -1 ){
+			printf("flush Error on  SerialConnection::readRxData= -1\n");
+			break;
+		}else if( n == 0 ){
+			printf("flush readData %d bytes\n", readflushData);
+			break;
+		}
+
+	}
+
+	return 0;
+}
+
+
+
+
+int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue) 
+{
+    uint8_t buf[4096];
+	int n = 0;
+
+//	const auto& time_cap0 = std::chrono::steady_clock::now();
+
+	for(int i=0; i< buffLen; i+=n)
+	{
+		unsigned long int buf_size = buffLen;
+		if(buf_size > sizeof(buf))
+			buf_size = sizeof(buf);
+
+		n = read(tofcamInfo.control_sock, buf, buf_size);
+
+		if(n > 0){						  
+			memcpy(socketbuff + i, buf, n);
+		}else if(n == -1){
+			printf("Error on  SerialConnection::readRxData= -1\n");
+			return -1;
+		}else if(n == 0 && i < buffLen-1){
+			printf("serialConnection->readRxData %d bytes from %d received\n", i, buffLen);
+			return -2;
+		}
+
+	}
+
+//	const auto& time_cap1 = std::chrono::steady_clock::now();
+//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
+//	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
+
+	if( !exit_thtread && addQue == true )
+	{
+		unsigned int type = socketbuff[4];
+
+		if( memcmp(socketbuff, START_MARKER, 4) != 0 )
+		{
+			printf("error start marker [%02X:%02X:%02X:%02X]\n", socketbuff[0], socketbuff[1], socketbuff[2], socketbuff[3]);
+		}
+		else if( type == 1 ){
+			pthread_mutex_lock(&tofcamBuff.lock);
+			
+			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
+			memcpy(tofcamBuff.tofcamBuf[tofcamBuff.head_idx], &socketbuff[9], buffLen-13);
+			tofcamBuff.bufLen[tofcamBuff.head_idx] = buffLen;
+			ADD_TOFCAM_BUFF(tofcamBuff, TOFCAM_ETH_BUFF_SIZE);
+			
+			pthread_mutex_unlock(&tofcamBuff.lock);
+		}
+		else{
+			printf("err recv data type = %d totalLen = %d recv = %d\n", type, buffLen, tofcamInfo.receivedBytes);
+		}
+
+		tofcamInfo.receivedBytes = 0;
+	}
+	else if( addQue == false ){
+		tofcamInfo.receivedBytes = 0;
+	}
+
+	return buffLen;
+}
+
 #endif
 //////////////////////////////////// External Interface ////////////////////////////////////////
 
@@ -1957,158 +2108,6 @@ void NSL3130AA::setKey(int cmdKey)
 {	
 	tofcamInfo.tofcamEvent_key = cmdKey;
 }
-
-#ifndef _WINDOWS
-int NSL3130AA::setSerialBaudrate(void)
-{
-	int fileID;
-
-	char path[100];
-	sprintf(path, "%s", mIpaddr.c_str());
-	fileID = open(path, O_RDWR | O_NOCTTY | O_SYNC);
-	if( fileID < 0 ) return 0;
-	tcflush(fileID, TCIOFLUSH);
-
-	struct termios tty;
-	memset (&tty, 0, sizeof tty);
-
-	tcgetattr (fileID, &tty); //TODO...
-
-	cfsetospeed (&tty, B4000000);
-	cfsetispeed (&tty, B4000000);
-
-	// no canonical processing
-	// disable IGNBRK for mismatched speed tests; otherwise receive break as \000 chars
-
-	tty.c_oflag = 0;				// no remapping, no delays
-//	tty.c_oflag &= ~(ONLCR | OCRNL); //TODO...
-
-	tty.c_lflag = 0;				// no signaling chars, no echo,
-//	tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN); //TODO...
-
-//	tty.c_iflag = (IGNBRK|IGNPAR);
-	tty.c_iflag &= ~IGNBRK; 		// disable break processing
-	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
-	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL); //TODO...
-
-	tty.c_cc[VMIN]	= 0;			// non-blocking read
-	tty.c_cc[VTIME] = 5;			// 0.5 second read timeout
-
-	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; 	// 8-bit chars				  
-	tty.c_cflag &= ~(PARENB | PARODD);	// shut off parity
-	tty.c_cflag &= ~CSTOPB;    //one stop bit
-	tty.c_cflag &= ~CRTSCTS;
-	tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls   
-
-	tcflush(fileID, TCIOFLUSH);
-
-	if (tcsetattr (fileID, TCSANOW, &tty) != 0){
-		printf("error %d from tcsetattr\n", errno);
-		return 0;
-	}
-
-	printf("opened USB-Serial : %d\n", fileID);
-	tofcamInfo.control_sock = fileID;
-	flushRx();
-
-	return fileID;
-}
-
-
-int NSL3130AA::flushRx(void)
-{
-	uint8_t buf[5000];
-	int n = 0;
-	int readflushData = 0;
-
-	reqSingleFrame(tofcamInfo.control_sock, tofcamInfo.tofcamModeType);
-
-	while(true)
-	{
-		n = read(tofcamInfo.control_sock, buf, 5000);
-
-		if(n > 0){
-			readflushData += n;
-		}else if( n == -1 ){
-			printf("flush Error on  SerialConnection::readRxData= -1\n");
-			break;
-		}else if( n == 0 ){
-			printf("flush readData %d bytes\n", readflushData);
-			break;
-		}
-
-	}
-
-	return 0;
-}
-
-
-
-
-int NSL3130AA::rxSerial(uint8_t *socketbuff, int buffLen, bool addQue) 
-{
-    uint8_t buf[4096];
-	int n = 0;
-
-//	const auto& time_cap0 = std::chrono::steady_clock::now();
-
-	for(int i=0; i< buffLen; i+=n)
-	{
-		unsigned long int buf_size = buffLen;
-		if(buf_size > sizeof(buf))
-			buf_size = sizeof(buf);
-
-		n = read(tofcamInfo.control_sock, buf, buf_size);
-
-		if(n > 0){						  
-			memcpy(socketbuff + i, buf, n);
-		}else if(n == -1){
-			printf("Error on  SerialConnection::readRxData= -1\n");
-			return -1;
-		}else if(n == 0 && i < buffLen-1){
-			printf("serialConnection->readRxData %d bytes from %d received\n", i, buffLen);
-			return -2;
-		}
-
-	}
-
-//	const auto& time_cap1 = std::chrono::steady_clock::now();
-//	double time_cam = (time_cap1 - time_cap0).count() / 1000000.0;
-//	printf("  serial-Rx:		   %9.3lf [msec] len = %d\n", time_cam, buffLen);
-
-	if( !exit_thtread && addQue == true )
-	{
-		unsigned int type = socketbuff[4];
-
-		if( memcmp(socketbuff, START_MARKER, 4) != 0 )
-		{
-			printf("error start marker [%02X:%02X:%02X:%02X]\n", socketbuff[0], socketbuff[1], socketbuff[2], socketbuff[3]);
-		}
-		else if( type == 1 ){
-			pthread_mutex_lock(&tofcamBuff.lock);
-			
-			tofcamBuff.bufGrayLen[tofcamBuff.head_idx] = 0;
-			memcpy(tofcamBuff.tofcamBuf[tofcamBuff.head_idx], &socketbuff[9], buffLen-13);
-			tofcamBuff.bufLen[tofcamBuff.head_idx] = buffLen;
-			ADD_TOFCAM_BUFF(tofcamBuff, TOFCAM_ETH_BUFF_SIZE);
-			
-			pthread_mutex_unlock(&tofcamBuff.lock);
-		}
-		else{
-			printf("err recv data type = %d totalLen = %d recv = %d\n", type, buffLen, tofcamInfo.receivedBytes);
-		}
-
-		tofcamInfo.receivedBytes = 0;
-	}
-	else if( addQue == false ){
-		tofcamInfo.receivedBytes = 0;
-	}
-
-	return buffLen;
-}
-
-
-#endif
 
 
 // constructor
