@@ -279,15 +279,15 @@ void NSL1110AA::setGrayScaledColor(cv::Mat &imageLidar, int x, int y, int value,
 	}
 	else if (value == DME660_SATURATION)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 255;
+		imageLidar.at<Vec3b>(y, x)[0] = 128;
 		imageLidar.at<Vec3b>(y, x)[1] = 0;
-		imageLidar.at<Vec3b>(y, x)[2] = 128; 
+		imageLidar.at<Vec3b>(y, x)[2] = 255; 
 	}
 	else if (value == DME660_ADC_OVERFLOW)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 169;
+		imageLidar.at<Vec3b>(y, x)[0] = 255;
 		imageLidar.at<Vec3b>(y, x)[1] = 14;
-		imageLidar.at<Vec3b>(y, x)[2] = 255; 
+		imageLidar.at<Vec3b>(y, x)[2] = 169; 
 	}
 	else if(value == DME660_PIXEL_BADASYM)
 	{
@@ -383,15 +383,15 @@ void NSL1110AA::setAmplitudeColor(cv::Mat &imageLidar, int x, int y, int value )
 	}
 	else if (value == DME660_SATURATION)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 255;
+		imageLidar.at<Vec3b>(y, x)[0] = 128;
 		imageLidar.at<Vec3b>(y, x)[1] = 0;
-		imageLidar.at<Vec3b>(y, x)[2] = 128; 
+		imageLidar.at<Vec3b>(y, x)[2] = 255; 
 	}
 	else if (value == DME660_ADC_OVERFLOW)
 	{
-		imageLidar.at<Vec3b>(y, x)[0] = 169;
+		imageLidar.at<Vec3b>(y, x)[0] = 255;
 		imageLidar.at<Vec3b>(y, x)[1] = 14;
-		imageLidar.at<Vec3b>(y, x)[2] = 255; 
+		imageLidar.at<Vec3b>(y, x)[2] = 169; 
 	}
 	else if(value == DME660_PIXEL_BADASYM)
 	{
