@@ -286,6 +286,7 @@ void videoSource::getMouseEvent( int *mouse_xpos, int *mouse_ypos )
 /////////////////////////////////////// public function ///////////////////////////////////////////////////////////
 void videoSource::initDeepLearning( CaptureOptions *pAppCfg )
 {
+#ifdef SUPPORT_DEEPLEARNING
 #ifdef _WINDOWS
 	cv::String ssd_model = "..\\deepLearning\\frozen_inference_graph.pb";
 	cv::String ssd_config = "..\\deepLearning\\ssd_mobilenet_v2.pbtxt";
@@ -311,11 +312,13 @@ void videoSource::initDeepLearning( CaptureOptions *pAppCfg )
 
 	conf_threshold = pAppCfg->detectThreshold;
 	printf("THRESHOLD::conf_threshold = %.1f\n", conf_threshold);
+#endif	
 }
 
 
 void videoSource::deepLearning( cv::Mat imageLidar )
 {
+#ifdef SUPPORT_DEEPLEARNING
 	if( dnnNet.empty() ) return;
 	
 	cv::Mat blob = cv::dnn::blobFromImage(imageLidar, 1.0, cv::Size(300, 300), true, false);
@@ -338,6 +341,7 @@ void videoSource::deepLearning( cv::Mat imageLidar )
 			cv::putText(imageLidar, label, cv::Point(x1_90d, y1_90d - 1), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(0, 255, 0));
 		}
 	}
+#endif
 }
 
 

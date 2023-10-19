@@ -23,8 +23,12 @@
 #ifndef __VIDEO_SOURCE_H__
 #define __VIDEO_SOURCE_H__
 
+#include "NSLFrame.h"
+
 #include <opencv2/opencv.hpp>
+#ifdef SUPPORT_DEEPLEARNING
 #include <opencv2/dnn.hpp>
+#endif
 #include <opencv2/highgui.hpp>
 #include <opencv2/core/ocl.hpp>
 
@@ -32,8 +36,8 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <chrono>
 
-#include "NSLFrame.h"
 #include "lens_transform.h"
 
 class videoSource
@@ -65,9 +69,10 @@ private:
 	clock_t beginTime, endTime ;
 
 	std::atomic<int> x_start, y_start;
+#ifdef SUPPORT_DEEPLEARNING
 	cv::dnn::Net dnnNet;
 	float conf_threshold;
-
+#endif
 
 public:
 	static videoSource * initAppCfg(int argc, char **argv, CaptureOptions *pAppCfg);
