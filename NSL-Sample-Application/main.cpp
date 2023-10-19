@@ -20,6 +20,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+//#define SUPPORT_DEEPLEARNING
 
 #ifdef _WINDOWS
 
