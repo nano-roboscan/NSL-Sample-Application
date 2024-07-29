@@ -598,9 +598,9 @@ int NSL3130AA::getDistanceAmplitude(cv::Mat &imageDistance, cv::Mat &imageAmplit
 	memset(distanceTable, 0, sizeof(distanceTable));
 
 //	printf("width = %d height = %d/%d hdr = %d\r\n", tofcamInfo.header.width, tofcamInfo.header.height, maxHeight, tofcamInfo.config.hdr_mode);
-#ifdef _WINDOWS
+
 	point_cloud_ptr->clear();
-#endif
+
 
     for (y = 0; y < maxHeight; y += stepY)
 	{
@@ -633,7 +633,7 @@ int NSL3130AA::getDistanceAmplitude(cv::Mat &imageDistance, cv::Mat &imageAmplit
 				setDistanceColor(imageDistance, x, y+1, pixelDistance);
 			}
 			
-#ifdef _WINDOWS
+
 			if( bUsedPointCloud ){
 				pcl::PointXYZRGB point;
 				pcl::PointXYZRGB basePoint;
@@ -666,7 +666,7 @@ int NSL3130AA::getDistanceAmplitude(cv::Mat &imageDistance, cv::Mat &imageAmplit
 				point_cloud_ptr->points.push_back(point);
 				point_cloud_ptr->points.push_back(basePoint);
 			}
-#endif
+
 
 			index++;
 		}
@@ -693,9 +693,9 @@ int NSL3130AA::getGrayscaled(cv::Mat &imageLidar, bool bUsedPointCloud)
 
 	memset(distanceTable, 0, sizeof(distanceTable));
 	//	printf("width = %d height = %d/%d hdr = %d\r\n", tofcamInfo.header.width, tofcamInfo.header.height, maxHeight, tofcamInfo.config.hdr_mode);
-#ifdef _WINDOWS
+
 	point_cloud_ptr->clear();
-#endif
+
 
 	for(int y = 0; y < maxHeight; y+=stepY)
 	{
@@ -720,7 +720,7 @@ int NSL3130AA::getGrayscaled(cv::Mat &imageLidar, bool bUsedPointCloud)
 			}
 
 			if( tofcamInfo.tofcamModeType != GRAYSCALE_MODE ){
-#ifdef _WINDOWS
+
 				if( bUsedPointCloud ){
 					pcl::PointXYZRGB point;
 					pcl::PointXYZRGB basePoint;
@@ -753,7 +753,7 @@ int NSL3130AA::getGrayscaled(cv::Mat &imageLidar, bool bUsedPointCloud)
 					point_cloud_ptr->points.push_back(point);
 					point_cloud_ptr->points.push_back(basePoint);
 				}
-#endif
+
 			}
 			
 			index++;
@@ -1588,7 +1588,7 @@ pcl::visualization::PCLVisualizer::Ptr NSL3130AA::rgbVis(pcl::PointCloud<pcl::Po
 	viewer->addPointCloud<pcl::PointXYZRGB>(cloud, "sample cloud");
 	//viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
 	viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
-	//ÁÂÇ¥Ãà
+	//\C1\C2Ç¥\C3\E0
 	viewer->addCoordinateSystem(1.0);
 	viewer->initCameraParameters();
 	viewer->setCameraPosition(0, 0, -5, 0, 0, 0, 0, -1, 0, 0);
@@ -1645,6 +1645,80 @@ pcl::visualization::PCLVisualizer::Ptr NSL3130AA::rgbVis(pcl::PointCloud<pcl::Po
 }
 
 #else
+
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr NSL3130AA::pcbVis()
+{
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+	point_cloud_ptr->clear();
+	point_cloud_ptr->is_dense = false;
+	//point_cloud_ptr->reserve(IMAGE_WIDTH * IMAGE_HEIGHT);
+	point_cloud_ptr->width = TOF660_IMAGE_WIDTH;
+	point_cloud_ptr->height = TOF660_IMAGE_HEIGHT;
+
+	return point_cloud_ptr;
+}
+
+pcl::visualization::PCLVisualizer::Ptr NSL3130AA::rgbVis(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud)
+{
+	pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("ROBOSCAN PointCloud"));
+	viewer->addPointCloud<pcl::PointXYZRGB>(cloud, "sample cloud");
+	//viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
+	viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
+	//\C1\C2Ç¥\C3\E0
+	viewer->addCoordinateSystem(1.0);
+	viewer->initCameraParameters();
+	viewer->setCameraPosition(0, 0, -5, 0, 0, 0, 0, -1, 0, 0);
+	viewer->setShowFPS(false);
+	//viewer->registerKeyboardCallback(keyboardEventOccurred, (void*)viewer.get());
+#if 0
+	pcl::PointXYZ a1, a2;
+	a1.x = -1.450;
+	a1.y = -0.450;
+	a1.z = 5.000;
+	a2.x = 1.450;
+	a2.y = -0.450;
+	a2.z = 5.000;
+	viewer->addLine(a1, a2, "a12");
+
+	pcl::PointXYZ a3, a4;
+	a3.x = -1.450;
+	a3.y = 0.450;
+	a3.z = 5.000;
+	a4.x = 1.450;
+	a4.y = 0.450;
+	a4.z = 5.000;
+	viewer->addLine(a3, a4, "a34");
+
+	pcl::PointXYZ a5, a6;
+	a5.x = -1.450;
+	a5.y = -0.450;
+	a5.z = 3.000;
+	a6.x = 1.450;
+	a6.y = -0.450;
+	a6.z = 3.000;
+	viewer->addLine(a5, a6, "a56");
+
+	pcl::PointXYZ a7, a8;
+	a7.x = -1.450;
+	a7.y = 0.450;
+	a7.z = 3.000;
+	a8.x = 1.450;
+	a8.y = 0.450;
+	a8.z = 3.000;
+	viewer->addLine(a7, a8, "a78");
+
+	viewer->addLine(a1, a5, "a15");
+	viewer->addLine(a2, a6, "a26");
+	viewer->addLine(a3, a7, "a37");
+	viewer->addLine(a4, a8, "a45");
+
+	viewer->addLine(a1, a3, "a13");
+	viewer->addLine(a2, a4, "a24");
+	viewer->addLine(a5, a7, "a57");
+	viewer->addLine(a6, a8, "a68");
+#endif
+	return (viewer);
+}
 
 int NSL3130AA::setSerialBaudrate(void)
 {
@@ -1869,12 +1943,12 @@ bool NSL3130AA::isRotate90()
 
 void NSL3130AA::drawPointCloud(void)
 {
-#ifdef _WINDOWS
+
 	if( !viewer->wasStopped() && point_cloud_ptr->points.size() > 0 ){
 		viewer->updatePointCloud(point_cloud_ptr, "sample cloud");
 		viewer->spinOnce();
 	}
-#endif
+
 }
 
 std::string NSL3130AA::getDistanceString(int distance )
@@ -2177,6 +2251,7 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 #ifndef _WINDOWS
 	if( !( mIpaddr.at(0) >= 0x30 && mIpaddr.at(0) <= 0x39 ) ){
 		ttySerial = true;
+		printf("setSerialBaudrate()\n");
 		setSerialBaudrate();
 	}
 #endif
@@ -2205,11 +2280,20 @@ NSL3130AA::NSL3130AA( std::string ipaddr )
 	cos_angle = cos(psdAngle*PI/180.0);
 
 	tofcamInfo.usedPointCloud = 1;
-	lensTransform.initLensDistortionTable(STANDARD_FIELD);
+	lensTransform.initLensDistortionTable(WIDE_FIELD);
 	
 	point_cloud_ptr = pcbVis();
 	viewer = rgbVis(point_cloud_ptr);
 #else
+	double psdAngle = 0.0f; //seobi psd angle 0'
+	sin_angle = sin(psdAngle*PI/180.0);
+	cos_angle = cos(psdAngle*PI/180.0);
+
+	tofcamInfo.usedPointCloud = 1;
+	lensTransform.initLensDistortionTable(WIDE_FIELD);
+	
+	point_cloud_ptr = pcbVis();
+	viewer = rgbVis(point_cloud_ptr);
 	pthread_create(&threadID, NULL, NSL3130AA::rxWrapper, this);
 #endif
 

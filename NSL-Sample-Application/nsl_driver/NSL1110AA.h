@@ -33,6 +33,14 @@
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
+
+#else
+#include <pcl/common/common_headers.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/console/parse.h>
+
 #endif
 
 #include "videoSource.h"
@@ -245,10 +253,16 @@ private:
 	pcl::visualization::PCLVisualizer::Ptr viewer;
 	LensTransform  lensTransform;
 #else
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcbVis();
+	pcl::visualization::PCLVisualizer::Ptr rgbVis(pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud);
+
 	static void* rxWrapper(void* thisPtr) {
 		((NSL1110AA*) thisPtr)->rxDme660(NULL);
 		return NULL;
 	}
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr;
+	pcl::visualization::PCLVisualizer::Ptr viewer;
+	LensTransform  lensTransform;
 
 	pthread_t threadID;
 #endif

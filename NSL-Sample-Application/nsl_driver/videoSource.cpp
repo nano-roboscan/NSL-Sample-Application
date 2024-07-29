@@ -128,7 +128,7 @@ videoSource *videoSource::initAppCfg(int argc, char **argv, CaptureOptions *pApp
 	}
 
 	
-	char *ipAddr = find_char_arg(argc, argv, "ipaddr", "192.168.0.220");	
+	char *ipAddr = find_char_arg(argc, argv, "ipaddr", "/dev/ttyLidar");//192.168.0.220	
 
 	pAppCfg->lidarType = find_int_arg(argc, argv, "-nslType", NSL3130_TYPE); // 0 : NSL1110AA, 1 : NSL3130AA
 	pAppCfg->inputSize = find_int_arg(argc, argv, "-inputSize", 0); // 0 : 320, 1 : 416
