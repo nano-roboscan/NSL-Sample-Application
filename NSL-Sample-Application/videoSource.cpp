@@ -135,7 +135,7 @@ videoSource* createApp(int argc, char **argv, CaptureOptions *pAppCfg)
 	cv::setMouseCallback(WIN_NAME, callback_mouse_click, vidSrc);
 		
 
-	const char *ipAddr = vidSrc->find_char_arg(argc, argv, "ipaddr", "192.168.0.190");//192.168.0.220	
+	const char *ipAddr = vidSrc->find_char_arg(argc, argv, "ipaddr", "192.168.0.220");//192.168.0.220	
 //	const char *ipAddr = vidSrc->find_char_arg(argc, argv, "ipaddr", "/dev/ttyLidar");//192.168.0.220	
 
 	pAppCfg->inputSize = vidSrc->find_int_arg(argc, argv, "-inputSize", 0); // 0 : 320, 1 : 416
