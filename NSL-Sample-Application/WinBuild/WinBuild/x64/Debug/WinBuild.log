@@ -1,0 +1,6 @@
+﻿  main.cpp
+  videoSource.cpp
+D:\source\Git-Hub\NSL-Sample-Application\NSL-Sample-Application\videoSource.cpp(142,77): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+D:\source\Git-Hub\NSL-Sample-Application\NSL-Sample-Application\videoSource.cpp(311,23): warning C4244: '=': 'double'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  코드를 생성하고 있습니다...
+  WinBuild.vcxproj -> D:\source\Git-Hub\NSL-Sample-Application\NSL-Sample-Application\WinBuild\x64\Debug\WinBuild.exe

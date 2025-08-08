@@ -1,0 +1,5 @@
+﻿  main.cpp
+D:\source\Git-Hub\NSL-Sample-Application\NSL-Sample-Application\videoSource.h(26,10): fatal error C1083: 포함 파일을 열 수 없습니다. 'opencv2/opencv.hpp': No such file or directory
+  videoSource.cpp
+D:\source\Git-Hub\NSL-Sample-Application\NSL-Sample-Application\videoSource.h(26,10): fatal error C1083: 포함 파일을 열 수 없습니다. 'opencv2/opencv.hpp': No such file or directory
+  코드를 생성하고 있습니다...
