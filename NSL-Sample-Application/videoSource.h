@@ -133,7 +133,6 @@ public:
 	int getHeightDiv();
 	int getWidth();
 	int getHeight();
-	bool isRotate90();	
 	std::string getLeftViewName();
 
 	int handle;
