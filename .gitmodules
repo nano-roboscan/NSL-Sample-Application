@@ -1,3 +1,9 @@
 [submodule "NSL-Sample-Application/nsl_lib"]
 	path = NSL-Sample-Application/nsl_lib
 	url = https://github.com/nano-roboscan/nsl3140-Library.git
+[submodule "PCL"]
+	path = PCL
+	url = https://github.com/nano-roboscan/PCL-Installer.git
+[submodule "OPENCV"]
+	path = OPENCV
+	url = https://github.com/nano-roboscan/OpenCv454-LIbrary.git
