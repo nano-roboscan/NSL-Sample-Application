@@ -25,6 +25,7 @@ $ service udev restart
 
 ## LINUX 컴파일 방법
 ```
+$ git clone --recurse-submodules https://github.com/nano-roboscan/NSL-Sample-Application.git
 $ cd NSL-Sample-Application/NSL-Sample-Application/
 $ mkdir build
 $ cd build
