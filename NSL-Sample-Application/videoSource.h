@@ -103,7 +103,7 @@ private:
 public:
 	void getMouseEvent( int *mouse_xpos, int *mouse_ypos );
 	void mouse_click_func(int event, int x, int y);
-	void setMatrixColor(cv::Mat image, int x, int y, NslOption::NslVec3b color);
+	void setMatrixColor(cv::Mat image, int x, int y, NslVec3b color);
 	void del_arg(int argc, char **argv, int index);
 	int find_arg(int argc, char* argv[], char *arg);
 	int find_int_arg(int argc, char **argv, const char *arg, int def);
